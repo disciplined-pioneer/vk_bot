@@ -69,9 +69,17 @@ class ModelAdmin(Document):
         return await cls.find_all().to_list()
 
 
-class User(ModelAdmin):
-    tg_id: int
-    full_name: Optional[str] = None
+class Message(ModelAdmin):
+
+    user_id: Optional[int] = None
+    group_id: Optional[int] = None
+    post_id: Optional[int] = None
+    parent_comment_id: Optional[int] = None
+    
+    comment_id: Optional[int] = None
+    message_type: Optional[str] = None
+    message: Optional[str] = None
+    timestamp: Optional[int] = None
 
     class Settings:
-        name = "Users"
+        name = "Messages"

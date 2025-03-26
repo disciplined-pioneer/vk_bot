@@ -10,6 +10,6 @@ client = AsyncIOMotorClient(settings.mongo.URL)
 
 async def init_mongo():
     await init_beanie(
-        database=client["client"],
+        database=client["mydatabase"],
         document_models=document_models
     )

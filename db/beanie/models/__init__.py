@@ -1,5 +1,5 @@
-from .models import User
+from .models import *
 
 document_models = [
-    User
+    Message
 ]

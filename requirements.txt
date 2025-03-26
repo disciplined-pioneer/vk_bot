@@ -1,7 +1,8 @@
-flask
 requests
 pyngrok
 beanie[odm]
 motor
 vkbottle
 pydantic-settings
+quart
+
