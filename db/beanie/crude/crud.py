@@ -14,5 +14,3 @@ async def init():
 
     
     client.close()
-
-asyncio.run(init_beanie())

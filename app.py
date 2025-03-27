@@ -4,12 +4,8 @@ import asyncio
 from pyngrok import ngrok
 from db.beanie.models.models import Message
 from core.mongo import init_mongo
+from settings import settings
 
-# Конфигурация
-SECRET_KEY = "obama"
-ACCESS_TOKEN = "vk1.a.Ky0wxlpHEU97ml2RH8nUXGRw5zBSXMLmRHFCeTbJH4FM6_T4Mrl_k7YtPjq9rYvbAoP5jkMTydVFlWk2aPhgl5Q-aZ7DWMu4hCMIMb7OgAHBdis8Ls2sM0SenAfXKF3FmhcWpQnaSEcpKkvQnX6S4aOG3-PTdj6hBIR4HHTck93zWkRyErb5xGsMzZta9v3yRTdotFiRN9dw1fxgmKRCug"
-CONFIRMATION_TOKEN = "5f9af579"
-GROUP_ID = -229856852
 
 app = Quart(__name__)
 
@@ -21,18 +17,19 @@ async def init_db():
 async def before_serving():
     await init_db()
 
+
 # Пример маршрута Quart
 @app.route("/", methods=["POST"])
 async def vk_callback():
     data = await request.json
 
     # Проверяем секретный ключ
-    if "secret" in data and data["secret"] != SECRET_KEY:
+    if "secret" in data and data["secret"] != settings.vk_bot.SECRET_KEY:
         return "Invalid secret", 403
 
     # Подтверждение сервера ВК
     if data["type"] == "confirmation":
-        return CONFIRMATION_TOKEN
+        return settings.vk_bot.CONFIRMATION_TOKEN
 
     # Обрабатываем новый комментарий
     if data["type"] == "wall_reply_new":
@@ -40,29 +37,38 @@ async def vk_callback():
         user_id = data["object"]["from_id"]
         group_id = data["group_id"]
         post_id = data["object"]["post_id"]
-        parent_comment_id = data["object"].get("reply_to_comment")
+        parent_id = data["object"].get("parents_stack")
+        parent_id = parent_id[0] if isinstance(parent_id, list) and parent_id else None
 
         comment_text = data["object"]["text"].split(', ')[-1]
         comment_id = data["object"]["id"]
 
         # Проверка: если комментарий от бота, не отвечать на него
-        if user_id == GROUP_ID:
+        if user_id == settings.vk_bot.GROUP_ID:
+            # Асинхронное добавление истории
+            await Message.create(
+                post_id=post_id,
+                group_id=group_id,
+                user_id=user_id,
+                parent_id=parent_id ,
+                comment_id=comment_id,
+                message_type='ai',
+                message=comment_text,
+                timestamp=465
+            )
             return "ok"
-
+        
         # Асинхронное добавление истории
         await Message.create(
-            user_id=user_id,
-            group_id=group_id,
             post_id=post_id,
-            parent_comment_id=parent_comment_id,
-
+            group_id=group_id,
+            user_id=user_id,
+            parent_id=parent_id,
             comment_id=comment_id,
-            message_type='men',
+            message_type='human',
             message=comment_text,
-            timestamp=465  # Используйте timestamp вместо datetime
+            timestamp=465
         )
-        message_from_db = await Message.all()
-        print(message_from_db)
 
         # Отправляем ответ на комментарий
         reply_text = f"Спасибо за комментарий! Мы свяжемся с вами."
@@ -75,11 +81,11 @@ def send_comment_reply(post_id, comment_id, text):
     """Функция для ответа на комментарий"""
     url = "https://api.vk.com/method/wall.createComment"
     params = {
-        "owner_id": GROUP_ID, 
+        "owner_id": settings.vk_bot.GROUP_ID, 
         "post_id": post_id,
         "reply_to_comment": comment_id,
         "message": text,
-        "access_token": ACCESS_TOKEN,
+        "access_token": settings.vk_bot.ACCESS_TOKEN,
         "v": "5.199"
     }
     response = requests.post(url, params=params)

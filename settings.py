@@ -1,7 +1,16 @@
-from pathlib import Path
-
-from pydantic import field_validator
 from pydantic_settings import BaseSettings
+
+
+class VkBot(BaseSettings):
+    SECRET_KEY: str
+    ACCESS_TOKEN: str
+    CONFIRMATION_TOKEN: str
+    GROUP_ID: int
+
+    class Config:
+        env_prefix = 'VK_'
+        env_file = '.env'
+        extra = 'ignore'
 
 
 class MongoConfig(BaseSettings):
@@ -19,6 +28,7 @@ class MongoConfig(BaseSettings):
 
 class Settings:
 
+    vk_bot = VkBot()
     mongo = MongoConfig()
 
 settings = Settings()

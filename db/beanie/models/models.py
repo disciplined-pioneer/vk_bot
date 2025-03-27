@@ -71,10 +71,11 @@ class ModelAdmin(Document):
 
 class Message(ModelAdmin):
 
-    user_id: Optional[int] = None
-    group_id: Optional[int] = None
     post_id: Optional[int] = None
-    parent_comment_id: Optional[int] = None
+    group_id: Optional[int] = None
+    
+    user_id: Optional[int] = None
+    parent_id: Optional[int] = None
     
     comment_id: Optional[int] = None
     message_type: Optional[str] = None
