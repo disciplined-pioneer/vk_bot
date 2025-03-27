@@ -2,10 +2,11 @@ from pydantic_settings import BaseSettings
 
 
 class VkBot(BaseSettings):
-    SECRET_KEY: str
+    SECRET: str
     ACCESS_TOKEN: str
-    CONFIRMATION_TOKEN: str
+    CONFIRMATION: str
     GROUP_ID: int
+    APP_TOKEN: str
 
     class Config:
         env_prefix = 'VK_'

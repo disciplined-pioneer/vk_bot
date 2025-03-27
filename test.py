@@ -1,28 +1,22 @@
-from core.mongo import init_mongo
-from db.beanie.models.models import User
-import asyncio
+import requests
+from settings import settings
 
-async def main():
-    
-    # Инициализация MongoDB
-    await init_mongo()
 
-    # Создание пользователя
-    user = await User.create(tg_id=12555553, full_name="Иван Иванов")
-    print(f"Создан пользователь с ID: {user.id}")
+access_token = settings.vk_bot.APP_TOKEN
 
-    # Удаление пользователя с tg_id = 1234567890
-    user_to_delete = await User.find_one(User.tg_id == 1234567890)
-    if user_to_delete:
-        await user_to_delete.delete()
-        print("Пользователь с tg_id 1234567890 удален.")
-    else:
-        print("Пользователь с tg_id 1234567890 не найден.")
+#access_token = '310cc60f310cc60f310cc60f7832212ebc3310c310cc60f56e94421333b91e99013d519'
+print(access_token)
 
-    # Получение всех пользователей
-    all_users = await User.find_all().to_list()
-    for user in all_users:
-        print(f"\n{user}")
+owner_id = settings.vk_bot.GROUP_ID
 
-if __name__ == "__main__":
-    asyncio.run(main())
+post_id = '259'
+
+# Формируем строку для параметра "posts"
+posts = f'{owner_id}_{post_id}'
+
+url = f'https://api.vk.com/method/wall.getById?posts={posts}&access_token={access_token}&v=5.131'
+
+response = requests.get(url)
+data = response.json()
+
+print(data)
