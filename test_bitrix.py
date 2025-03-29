@@ -14,12 +14,10 @@ tasks = {
     }
 }
 
-# Создание объекта для работы с Bitrix24, передаем токен API
+# Создание объекта 
 bit = fast_bitrix24.Bitrix('https://b24-n8nava.bitrix24.ru/rest/60/7ts1m4u7e3egpyrt/')
 
 # Создание лида
 #result = bit.call('crm.lead.add', tasks)
-
-# Вывод результата
 #print(result)
 
