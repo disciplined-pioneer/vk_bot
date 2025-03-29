@@ -19,7 +19,7 @@ class MongoConfig(BaseSettings):
     HOST: str
 
     class Config:
-        env_prefix = 'Mongo_'
+        env_prefix = 'MONGO_'
         env_file = '.env'
         extra = 'ignore'
 
@@ -27,9 +27,20 @@ class MongoConfig(BaseSettings):
     def URL(self) -> str:
         return f"mongodb://{self.HOST}:{self.PORT}"
 
+
+class GptConfig(BaseSettings):
+    API_KEY: str
+    BASE_URL: str
+
+    class Config:
+        env_prefix = 'GPT_'
+        env_file = '.env'
+        extra = 'ignore'
+
 class Settings:
 
     vk_bot = VkBot()
     mongo = MongoConfig()
+    gpt = GptConfig()
 
 settings = Settings()

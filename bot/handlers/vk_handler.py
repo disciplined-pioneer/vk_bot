@@ -1,9 +1,14 @@
+import re
+
 from quart import request
-from db.beanie.models.models import Message
 from settings import settings
 from utils.vk_handler import *
+from db.beanie.models.models import Message
+
+from integrations.OpenAI.gpt_chat import GPTChat
 
 async def vk_callback():
+
     data = await request.json
 
     # Проверяем секретный ключ
@@ -22,11 +27,11 @@ async def vk_callback():
         parent_id = data["object"].get("parents_stack")
         parent_id = parent_id[0] if isinstance(parent_id, list) and parent_id else None
 
-        comment_text = data["object"]["text"].split(', ')[-1]
+        comment_text = re.sub(r'\[.*?\]\s*', '', data["object"]["text"])
         comment_id = data["object"]["id"]
         
         # Определяем тип сообщения
-        message_type = 'ai' if user_id == settings.vk_bot.GROUP_ID else 'human'
+        message_type = 'assistant' if user_id == settings.vk_bot.GROUP_ID else 'user'
 
         # Асинхронное добавление истории
         await Message.create(
@@ -36,20 +41,32 @@ async def vk_callback():
             parent_id=parent_id,
             comment_id=comment_id,
             message_type=message_type,
-            message=comment_text,
+            content=comment_text,
             timestamp=465
         )
 
         # Если комментарий от бота, сразу возвращаем "ok"
-        if message_type == 'ai':
+        if message_type == 'assistant':
             return "ok"
 
         text_post = get_post_text(post_id)
         print(f"\nТЕКСТ ПОСТА: {text_post}\n")
 
-        # Отправляем ответ на комментарий
-        reply_text = f"Спасибо за комментарий! Мы свяжемся с вами."
-        send_comment_reply(post_id, comment_id, reply_text)
+        # Ответ Gpt на сообщение пользователя
+        try:
+            chat = GPTChat(
+                api_key=settings.gpt.API_KEY,
+                base_url=settings.gpt.BASE_URL,
+            )
+
+            # Получение ответа и вывод его на экран
+            gpt_resp_text = await chat.chat(comment_text, parent_id=parent_id, prompt_path=r"data/openai/prompt.txt")
+            print(f"\nGPT: {gpt_resp_text}\n")
+
+            send_comment_reply(post_id, comment_id, gpt_resp_text)
+
+        except Exception as e:
+            print(f'\nПроизошла ошибка!!!\nОшибка: {e}\n')
 
     return "ok"
 

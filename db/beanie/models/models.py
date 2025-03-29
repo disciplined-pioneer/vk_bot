@@ -1,5 +1,6 @@
 from typing import Optional
 from beanie import Document
+from typing import List, Dict, Optional
 
 
 # Базовый класс для CRUD-операций
@@ -69,6 +70,7 @@ class ModelAdmin(Document):
         return await cls.find_all().to_list()
 
 
+# Класс дл сохранения истории сообщений
 class Message(ModelAdmin):
 
     post_id: Optional[int] = None
@@ -79,8 +81,33 @@ class Message(ModelAdmin):
     
     comment_id: Optional[int] = None
     message_type: Optional[str] = None
-    message: Optional[str] = None
+    content: Optional[str] = None
     timestamp: Optional[int] = None
 
     class Settings:
         name = "Messages"
+
+
+# Этот класс получения истории сообщений пользователя с ИИ
+class MessageHistory:
+
+    @classmethod
+    async def get_dialog_history(cls, parent_id: int) -> List[Dict[str, str]]:
+        # Получаем все сообщения с parent_id или comment_id == parent_id
+        messages = await Message.find(
+            {"$or": [
+                {"parent_id": parent_id},
+                {"comment_id": parent_id}  # Включаем сообщение с comment_id == parent_id
+            ]}
+        ).sort("timestamp").to_list()
+
+        # Формируем историю
+        history = []
+        for msg in messages:
+            role = "user" if msg.message_type == "user" else "assistant"
+            history.append({
+                "role": role,
+                "content": msg.content
+            })
+
+        return history
