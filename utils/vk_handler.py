@@ -1,6 +1,7 @@
 import requests
 from settings import settings
 
+
 # Функция для ответа на комментарий
 def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
     url = "https://api.vk.com/method/wall.createComment"
@@ -11,6 +12,24 @@ def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
         "message": text,
         "access_token": settings.vk_bot.ACCESS_TOKEN,
         "v": "5.199"
+    }
+
+    # Синхронный запрос
+    response = requests.post(url, params=params)
+    data = response.json()  # Парсим JSON ответ
+    print(f"\nAPI: {data}")
+    return data
+
+
+# Функция для ответа на личное сообщение
+def send_private_message(user_id: int, text: str) -> dict:
+    url = "https://api.vk.com/method/messages.send"
+    params = {
+        "peer_id": user_id, 
+        "message": text,     
+        "access_token": settings.vk_bot.ACCESS_TOKEN,
+        "v": "5.199",    
+        "random_id": 0    
     }
 
     # Синхронный запрос
