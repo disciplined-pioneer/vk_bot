@@ -2,8 +2,7 @@ import requests
 from settings import settings
 
 # Функция для ответа на комментарий
-def send_comment_reply(post_id, comment_id, text):
-    
+def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
     url = "https://api.vk.com/method/wall.createComment"
     params = {
         "owner_id": settings.vk_bot.GROUP_ID,
@@ -21,9 +20,8 @@ def send_comment_reply(post_id, comment_id, text):
     return data
 
 
-# Функция для получение текста поста
-def get_post_text(post_id):
-
+# Функция для получения текста поста
+def get_post_text(post_id: int) -> str:
     access_token = settings.vk_bot.APP_TOKEN
     owner_id = settings.vk_bot.GROUP_ID
     posts = f'{owner_id}_{post_id}'
@@ -38,4 +36,4 @@ def get_post_text(post_id):
         return post_text
     else:
         print("Ошибка при получении данных:", data)
-
+        return ""

@@ -39,7 +39,7 @@ class GptConfig(BaseSettings):
 
 
 class BitrixConfig(BaseSettings):
-    URL_BITRIX: str
+    URL: str
 
     class Config:
         env_prefix = 'BITRIX_'

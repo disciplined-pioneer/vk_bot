@@ -1,22 +1,24 @@
 import os
 from openai import OpenAI
 from db.beanie.models.models import MessageHistory
+from typing import Optional
 
+# Класс для общеня с GPT
 class GPTChat:
 
-    def __init__(self, api_key, base_url, model="gpt-4o"):
+    def __init__(self, api_key: str, base_url: str, model: str = "gpt-4o"):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
-        self.history = []  # Путая история чата
+        self.history: list[dict[str, str]] = []  # История чата
 
 
     # Загружает историю чата из MessageHistory.
-    async def load_history(self, parent_id):
+    async def load_history(self, parent_id: str) -> None:
         self.history = await MessageHistory.get_dialog_history(parent_id)
 
 
-    # читывает промпт из TXT-файла
-    def load_prompt(self, prompt_path):
+    # Читает промпт из TXT-файла
+    def load_prompt(self, prompt_path: str) -> Optional[str]:
         if not os.path.exists(prompt_path):
             print(f"Файл {prompt_path} не найден.")
             return None
@@ -25,8 +27,7 @@ class GPTChat:
 
 
     # Отправляет сообщение в OpenAI и получает ответ.
-    async def chat(self, user_input, parent_id=None, prompt_path=None):
-
+    async def chat(self, user_input: str, parent_id: Optional[str] = None, prompt_path: Optional[str] = None) -> str:
         if parent_id:
             await self.load_history(parent_id)
 

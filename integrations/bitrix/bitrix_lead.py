@@ -1,14 +1,11 @@
-
 import fast_bitrix24
 from settings import settings
 from utils.bitrix_lead import *
 
-# Функция для создания лида в Bitrix24 с конвертированной датой.s
-def create_lead(title, timestamp, link_post, article, count, params, comment):
-
-    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL_BITRIX) 
-
-    # Конвертация временной метки в дату
+# Функция для создания лида в Bitrix24
+def create_lead(title: str, timestamp: float, link_post: str, article: str, count: int, params: str, comment: str) -> None:
+    
+    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL) 
     date = convert_timestamp_to_date(timestamp)
 
     # Настройки задачи

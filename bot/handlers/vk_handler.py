@@ -47,7 +47,7 @@ async def vk_callback():
             timestamp=date
         )
 
-        # Если комментарий от бота, сразу возвращаем "ok"
+        # Если комментарий от бота, возвращаем "ok"
         if message_type == 'assistant':
             return "ok"
 
