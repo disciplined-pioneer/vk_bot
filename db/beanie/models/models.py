@@ -97,7 +97,10 @@ class MessageHistoryPost:
         messages = await MessagePost.find(
             {"$or": [
                 {"parent_id": parent_id},
-                {"comment_id": parent_id}  # Включаем сообщение с comment_id == parent_id
+                {"comment_id": parent_id}
+                ],
+            "$and": [
+                {"user_id": parent_id}
             ]}
         ).sort("timestamp").to_list()
 
