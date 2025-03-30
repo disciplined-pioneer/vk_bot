@@ -24,6 +24,8 @@ async def vk_callback():
         user_id = data["object"]["from_id"]
         group_id = data["group_id"]
         post_id = data["object"]["post_id"]
+        date = data["object"]["date"]
+
         parent_id = data["object"].get("parents_stack")
         parent_id = parent_id[0] if isinstance(parent_id, list) and parent_id else None
 
@@ -42,7 +44,7 @@ async def vk_callback():
             comment_id=comment_id,
             message_type=message_type,
             content=comment_text,
-            timestamp=465
+            timestamp=date
         )
 
         # Если комментарий от бота, сразу возвращаем "ok"

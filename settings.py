@@ -37,10 +37,21 @@ class GptConfig(BaseSettings):
         env_file = '.env'
         extra = 'ignore'
 
+
+class BitrixConfig(BaseSettings):
+    URL_BITRIX: str
+
+    class Config:
+        env_prefix = 'BITRIX_'
+        env_file = '.env'
+        extra = 'ignore'
+
+
 class Settings:
 
     vk_bot = VkBot()
     mongo = MongoConfig()
     gpt = GptConfig()
+    bitrix24 = BitrixConfig()
 
 settings = Settings()

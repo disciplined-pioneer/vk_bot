@@ -20,6 +20,7 @@ def send_comment_reply(post_id, comment_id, text):
     print(f"\nAPI: {data}")
     return data
 
+
 # Функция для получение текста поста
 def get_post_text(post_id):
 
