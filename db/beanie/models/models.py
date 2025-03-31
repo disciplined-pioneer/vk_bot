@@ -92,13 +92,16 @@ class MessagePost(ModelAdmin):
 class MessageHistoryPost:
 
     @classmethod
-    async def get_dialog_history(cls, parent_id: int) -> List[Dict[str, str]]:
+    async def get_dialog_history(cls, parent_id: int, user_id: int) -> List[Dict[str, str]]:
         # Получаем все сообщения с parent_id или comment_id == parent_id
         messages = await MessagePost.find(
             {"$or": [
                 {"parent_id": parent_id},
                 {"comment_id": parent_id}
-                ]
+                ],
+            "$and": [
+                {"user_id": user_id}
+            ]
             }
         ).sort("timestamp").to_list()
 

@@ -52,9 +52,10 @@ async def vk_callback():
         # Запрос в GPT
         text_post = get_post_text(post_id)
         gpt_resp_text = await process_gpt_response(source='post',
-                                            user_input=comment_text,
-                                            id_value=parent_id,
-                                            text_post=text_post)
+                                                   user_id=user_id,
+                                                   user_input=comment_text,
+                                                   id_value=parent_id,
+                                                   text_post=text_post)
             
 
         send_comment_reply(post_id, comment_id, gpt_resp_text)
@@ -89,11 +90,11 @@ async def vk_callback():
     
         # Запрос в GPT
         gpt_resp_text = await process_gpt_response(source='private',
-                                            user_input=content,
-                                            id_value=from_id,
-                                            text_post=text_post)
+                                                   user_id=from_id,
+                                                   user_input=content,
+                                                   id_value=from_id,
+                                                   text_post=text_post)
             
-
         send_private_message(from_id, gpt_resp_text)
 
 

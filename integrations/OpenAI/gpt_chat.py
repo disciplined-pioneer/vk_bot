@@ -14,10 +14,10 @@ class GPTChat:
 
 
     # Загружает историю чата из MessageHistory.
-    async def load_history(self, id_value: int) -> None:
+    async def load_history(self, id_value: int, user_id: int) -> None:
 
         if self.source == "post":
-            self.history.extend(await MessageHistoryPost.get_dialog_history(id_value))
+            self.history.extend(await MessageHistoryPost.get_dialog_history(id_value, user_id))
         elif self.source == "private":
             self.history.extend(await MessageHistoryPrivate.get_dialog_history(id_value))
         else:
@@ -35,7 +35,7 @@ class GPTChat:
 
 
     # Отправляет сообщение в OpenAI и получает ответ.
-    async def chat(self, user_input: str, text_post: str = '', id_value: Optional[int] = None, prompt_path: Optional[str] = None) -> str:
+    async def chat(self, user_id: int, user_input: str, text_post: str = '', id_value: Optional[int] = None, prompt_path: Optional[str] = None) -> str:
         
         self.history: list[dict[str, str]] = []
 
@@ -47,7 +47,7 @@ class GPTChat:
 
         # Загружаем историю сообщений
         if id_value:
-            await self.load_history(id_value)
+            await self.load_history(id_value=id_value, user_id=user_id)
 
         self.history.append({"role": "user", "content": user_input})
         print(f"\n\nИСТОРИЯ:\n{self.history}\n\n")

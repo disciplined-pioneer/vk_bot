@@ -59,7 +59,7 @@ def get_post_text(post_id: int) -> str:
 
 
 # Обрабатывает запрос к GPT и возвращает ответ.
-async def process_gpt_response(user_input, id_value, text_post, source):
+async def process_gpt_response(user_id: int, id_value: int, user_input: str, text_post: str, source: str) -> str:
     
     try:
         chat = GPTChat(
@@ -69,6 +69,7 @@ async def process_gpt_response(user_input, id_value, text_post, source):
         )
         result = await chat.chat(
             user_input=user_input,
+            user_id=user_id,
             id_value=id_value,
             text_post=text_post,
             prompt_path=r"data/openai/prompt.txt"
