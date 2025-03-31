@@ -49,7 +49,7 @@ class GPTChat:
         if id_value:
             await self.load_history(id_value)
 
-        #self.history.append({"role": "user", "content": user_input})
+        self.history.append({"role": "user", "content": user_input})
         print(f"\n\nИСТОРИЯ:\n{self.history}\n\n")
 
         # Отправляем запрос к GPT
