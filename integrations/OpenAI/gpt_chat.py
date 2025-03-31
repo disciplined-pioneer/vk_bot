@@ -17,33 +17,40 @@ class GPTChat:
     async def load_history(self, id_value: int) -> None:
 
         if self.source == "post":
-            self.history = await MessageHistoryPost.get_dialog_history(id_value)
+            self.history.extend(await MessageHistoryPost.get_dialog_history(id_value))
         elif self.source == "private":
-            self.history = await MessageHistoryPrivate.get_dialog_history(id_value)
+            self.history.extend(await MessageHistoryPrivate.get_dialog_history(id_value))
         else:
             raise ValueError("Invalid source specified. Use 'post' or 'private'.")
 
 
     # Читает промпт из TXT-файла
-    def load_prompt(self, prompt_path: str) -> Optional[str]:
+    def load_prompt(self, prompt_path: str, text_post:str) -> Optional[str]:
         if not os.path.exists(prompt_path):
             print(f"Файл {prompt_path} не найден.")
             return None
         with open(prompt_path, "r", encoding="utf-8") as f:
-            return f.read().strip()
+            text_prompt = f.read().strip() + f"\n\nТЕКСТ ПОСТА: {text_post}"
+            return text_prompt
 
 
     # Отправляет сообщение в OpenAI и получает ответ.
-    async def chat(self, user_input: str, id_value: Optional[int] = None, prompt_path: Optional[str] = None) -> str:
-        if id_value:
-            await self.load_history(id_value)  # Загружаем историю в зависимости от source
+    async def chat(self, user_input: str, text_post: str, id_value: Optional[int] = None, prompt_path: Optional[str] = None) -> str:
+        
+        self.history: list[dict[str, str]] = []
 
+        # Загружаем промпт
         if prompt_path:
-            prompt = self.load_prompt(prompt_path)
+            prompt = self.load_prompt(prompt_path, text_post)
             if prompt:
                 self.history.append({"role": "system", "content": prompt})
 
-        self.history.append({"role": "user", "content": user_input})
+        # Загружаем историю сообщений
+        if id_value:
+            await self.load_history(id_value)
+
+        #self.history.append({"role": "user", "content": user_input})
+        print(f"\n\nИСТОРИЯ:\n{self.history}\n\n")
 
         # Отправляем запрос к GPT
         chat_completion = self.client.chat.completions.create(

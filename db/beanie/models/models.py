@@ -98,10 +98,8 @@ class MessageHistoryPost:
             {"$or": [
                 {"parent_id": parent_id},
                 {"comment_id": parent_id}
-                ],
-            "$and": [
-                {"user_id": parent_id}
-            ]}
+                ]
+            }
         ).sort("timestamp").to_list()
 
         # Формируем историю

@@ -29,7 +29,7 @@ async def vk_callback():
         parent_id = data["object"].get("parents_stack")
         parent_id = parent_id[0] if isinstance(parent_id, list) and parent_id else None
 
-        comment_text = re.sub(r'\[.*?\]\s*', '', data["object"]["text"])
+        comment_text = re.sub(r'\[.*?\]\s*,?\s*', '', data["object"]["text"])
         comment_id = data["object"]["id"]
         
         # Определяем тип сообщения
@@ -51,9 +51,6 @@ async def vk_callback():
         if message_type == 'assistant':
             return "ok"
 
-        text_post = get_post_text(post_id)
-        print(f"\nТЕКСТ ПОСТА: {text_post}\n")
-
         # Ответ Gpt на сообщение пользователя
         try:
             chat = GPTChat(
@@ -63,15 +60,13 @@ async def vk_callback():
             )
 
             # Получение ответа и вывод его на экран
+            text_post = get_post_text(post_id)
             gpt_resp_text = await chat.chat(
                 user_input=comment_text, 
-                id_value=parent_id,  
+                id_value=parent_id,
+                text_post=text_post,
                 prompt_path=r"data/openai/prompt.txt"
             )
-
-            print(f"\nGPT: {gpt_resp_text}\n")
-
-
             send_comment_reply(post_id, comment_id, gpt_resp_text)
 
         except Exception as e:
@@ -113,9 +108,6 @@ async def vk_callback():
                 id_value=from_id,  
                 prompt_path=r"data/openai/prompt.txt"
             )
-
-            print(f"\nGPT: {gpt_resp_text}\n")
-
             send_private_message(user_id=from_id, text=gpt_resp_text)
 
         except Exception as e:
