@@ -59,7 +59,9 @@ def get_post_text(post_id: int) -> str:
 
 
 # Обрабатывает запрос к GPT и возвращает ответ.
-async def process_gpt_response(user_id: int, id_value: int, user_input: str, text_post: str, source: str) -> str:
+async def process_gpt_response(user_id: int, id_value: int,
+                               user_input: str, text_post: str,
+                               source: str) -> str:
     
     try:
         chat = GPTChat(
