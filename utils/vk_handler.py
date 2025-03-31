@@ -1,6 +1,6 @@
 import requests
 from settings import settings
-
+from integrations.OpenAI.gpt_chat import GPTChat
 
 # Функция для ответа на комментарий
 def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
@@ -56,3 +56,25 @@ def get_post_text(post_id: int) -> str:
     else:
         print("Ошибка при получении данных:", data)
         return ""
+
+
+# Обрабатывает запрос к GPT и возвращает ответ.
+async def process_gpt_response(user_input, id_value, text_post, source):
+    
+    try:
+        chat = GPTChat(
+            api_key=settings.gpt.API_KEY,
+            base_url=settings.gpt.BASE_URL,
+            source=source  
+        )
+        result = await chat.chat(
+            user_input=user_input,
+            id_value=id_value,
+            text_post=text_post,
+            prompt_path=r"data/openai/prompt.txt"
+        )
+        return result
+    
+    except Exception as e:
+        print(f"\n\nОшибка при запросе к GPT: {e}\n\n")
+        return ''

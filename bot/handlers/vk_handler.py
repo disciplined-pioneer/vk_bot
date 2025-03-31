@@ -5,8 +5,6 @@ from settings import settings
 from utils.vk_handler import *
 from db.beanie.models.models import MessagePost, MessagePrivate
 
-from integrations.OpenAI.gpt_chat import GPTChat
-
 async def vk_callback():
 
     data = await request.json
@@ -50,27 +48,16 @@ async def vk_callback():
         # Если комментарий от бота, возвращаем "ok"
         if message_type == 'assistant':
             return "ok"
+        
+        # Запрос в GPT
+        text_post = get_post_text(post_id)
+        gpt_resp_text = await process_gpt_response(source='post',
+                                            user_input=comment_text,
+                                            id_value=parent_id,
+                                            text_post=text_post)
+            
 
-        # Ответ Gpt на сообщение пользователя
-        try:
-            chat = GPTChat(
-                api_key=settings.gpt.API_KEY,
-                base_url=settings.gpt.BASE_URL,
-                source="post"  
-            )
-
-            # Получение ответа и вывод его на экран
-            text_post = get_post_text(post_id)
-            gpt_resp_text = await chat.chat(
-                user_input=comment_text, 
-                id_value=parent_id,
-                text_post=text_post,
-                prompt_path=r"data/openai/prompt.txt"
-            )
-            send_comment_reply(post_id, comment_id, gpt_resp_text)
-
-        except Exception as e:
-            print(f'\nПроизошла ошибка!!!\nОшибка: {e}\n')
+        send_comment_reply(post_id, comment_id, gpt_resp_text)
 
     # Обрабатываем ЛС пользователя
     elif data["type"] == "message_new":
@@ -99,26 +86,15 @@ async def vk_callback():
             content=content,
             date=date,
         )
-        
-        # Ответ Gpt на сообщение пользователя
-        try:
-            chat = GPTChat(
-                api_key=settings.gpt.API_KEY,
-                base_url=settings.gpt.BASE_URL,
-                source="private"  
-            )
+    
+        # Запрос в GPT
+        gpt_resp_text = await process_gpt_response(source='private',
+                                            user_input=content,
+                                            id_value=from_id,
+                                            text_post=text_post)
+            
 
-            # Получение ответа и вывод его на экран
-            gpt_resp_text = await chat.chat(
-                user_input=content,
-                text_post=text_post,
-                id_value=from_id,  
-                prompt_path=r"data/openai/prompt.txt"
-            )
-            send_private_message(user_id=from_id, text=gpt_resp_text)
-
-        except Exception as e:
-            print(f'\nПроизошла ошибка!!!\nОшибка: {e}\n')
+        send_private_message(from_id, gpt_resp_text)
 
 
     # Обрабатываем ответ бота на ЛС
