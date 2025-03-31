@@ -35,7 +35,7 @@ class GPTChat:
 
 
     # Отправляет сообщение в OpenAI и получает ответ.
-    async def chat(self, user_input: str, text_post: str, id_value: Optional[int] = None, prompt_path: Optional[str] = None) -> str:
+    async def chat(self, user_input: str, text_post: str = '', id_value: Optional[int] = None, prompt_path: Optional[str] = None) -> str:
         
         self.history: list[dict[str, str]] = []
 

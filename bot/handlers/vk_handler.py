@@ -83,6 +83,12 @@ async def vk_callback():
         content = data["object"]["message"]["text"]
         date = data["object"]["message"]["date"]
 
+        # Текст поста, который переслали, если есть
+        try:
+            text_post = data["object"]["message"]["attachments"][0]["wall"]["text"]
+        except:
+            text_post = ''
+
         # Асинхронное добавление истории
         await MessagePrivate.create(
             from_id=from_id,
@@ -104,7 +110,8 @@ async def vk_callback():
 
             # Получение ответа и вывод его на экран
             gpt_resp_text = await chat.chat(
-                user_input=content, 
+                user_input=content,
+                text_post=text_post,
                 id_value=from_id,  
                 prompt_path=r"data/openai/prompt.txt"
             )
