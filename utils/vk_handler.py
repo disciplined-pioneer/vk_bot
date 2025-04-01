@@ -1,3 +1,4 @@
+import re
 import requests
 from settings import settings
 from integrations.OpenAI.gpt_chat import GPTChat
@@ -56,6 +57,14 @@ def get_post_text(post_id: int) -> str:
     else:
         print("Ошибка при получении данных:", data)
         return ""
+
+
+# Извлекает сообщение бота и значение UF_CRM_1742556333 из текста
+def parse_vk_bot_response(text: str):
+    match = re.search(r'"UF_CRM_1742556333":\s*"(.+?)"', text)
+    order_info = match.group(1) if match else None
+    message = text.split("\n")[0]  # Первое предложение до пустой строки
+    return message, order_info
 
 
 # Обрабатывает запрос к GPT и возвращает ответ.

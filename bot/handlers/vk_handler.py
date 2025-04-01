@@ -5,6 +5,8 @@ from settings import settings
 from utils.vk_handler import *
 from db.beanie.models.models import MessagePost, MessagePrivate
 
+from integrations.bitrix.bitrix_lead import *
+
 async def vk_callback():
 
     data = await request.json
@@ -57,12 +59,22 @@ async def vk_callback():
                                                    id_value=parent_id,
                                                    text_post=text_post)
             
+        # Отправляем Лид, если он есть
+        message_gpt, order_info = parse_vk_bot_response(gpt_resp_text)
+        if order_info is not None:
+            await create_lead(timestamp=date,
+                              article=9999999999999,
+                              link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
+                              params=order_info,
+                              count=1,
+                              link_user=f"https://vk.com/id{user_id}")
+        send_comment_reply(post_id, comment_id, message_gpt)
 
-        send_comment_reply(post_id, comment_id, gpt_resp_text)
+
 
     # Обрабатываем ЛС пользователя
     elif data["type"] == "message_new":
-        from_id = data["object"]["message"]["from_id"]
+        user_id = data["object"]["message"]["from_id"]
         group_id = data["group_id"]
         id_message = data["object"]["message"]["id"]
         peer_id = data["object"]["message"]["peer_id"]
@@ -73,13 +85,16 @@ async def vk_callback():
 
         # Текст поста, который переслали, если есть
         try:
-            text_post = data["object"]["message"]["attachments"][0]["wall"]["text"]
+            post_inf = data["object"]["message"]["attachments"][0]["wall"]
+            post_id = post_inf["id"]
+            date = post_inf["date"]
+            text_post = post_inf["text"]
         except:
             text_post = ''
 
         # Асинхронное добавление истории
         await MessagePrivate.create(
-            from_id=from_id,
+            user_id=user_id,
             group_id=group_id,
             peer_id=peer_id,
             id_message=id_message,
@@ -90,18 +105,28 @@ async def vk_callback():
     
         # Запрос в GPT
         gpt_resp_text = await process_gpt_response(source='private',
-                                                   user_id=from_id,
+                                                   user_id=user_id,
                                                    user_input=content,
-                                                   id_value=from_id,
+                                                   id_value=user_id,
                                                    text_post=text_post)
             
-        send_private_message(from_id, gpt_resp_text)
+        # Отправляем Лид, если он есть
+        print(gpt_resp_text)
+        message_gpt, order_info = parse_vk_bot_response(gpt_resp_text)
+        if order_info is not None:
+            await create_lead(timestamp=date,
+                              article=9999999999999,
+                              link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
+                              params=order_info,
+                              count=1,
+                              link_user=f"https://vk.com/id{user_id}")
+        send_private_message(user_id, message_gpt)
 
 
     # Обрабатываем ответ бота на ЛС
     elif data["type"] == "message_reply":
         
-        from_id =  data["object"]["from_id"]
+        user_id =  data["object"]["from_id"]
         group_id = data["group_id"]
         peer_id = data["object"]["peer_id"]
         id_message = data["object"]["id"]
@@ -110,10 +135,9 @@ async def vk_callback():
         content = data["object"]["text"]
         date = data["object"]["date"]
         
-        
         # Асинхронное добавление истории
         await MessagePrivate.create(
-            from_id=from_id,
+            user_id=user_id,
             group_id=group_id,
             peer_id=peer_id,
             id_message=id_message,
@@ -123,6 +147,7 @@ async def vk_callback():
         )
         
         return "ok"
+
 
     else:
         pass

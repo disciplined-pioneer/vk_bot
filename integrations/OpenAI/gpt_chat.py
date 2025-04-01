@@ -48,9 +48,7 @@ class GPTChat:
         # Загружаем историю сообщений
         if id_value:
             await self.load_history(id_value=id_value, user_id=user_id)
-
         self.history.append({"role": "user", "content": user_input})
-        print(f"\n\nИСТОРИЯ:\n{self.history}\n\n")
 
         # Отправляем запрос к GPT
         chat_completion = self.client.chat.completions.create(
