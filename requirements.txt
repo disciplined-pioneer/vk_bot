@@ -1,5 +1,4 @@
 requests
-pyngrok
 beanie[odm]
 motor
 quart
