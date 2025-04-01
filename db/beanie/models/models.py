@@ -156,3 +156,16 @@ class MessageHistoryPrivate:
 
         return history
 
+
+# Класс для сохранения лидов
+class LeadBitrix(ModelAdmin):
+
+    date: Optional[int] = None
+    link_post: Optional[str] = None
+    article: Optional[int] = None
+    link_user: Optional[str] = None
+    lead_count: Optional[str] = None
+    params: Optional[str] = None
+
+    class Settings:
+        name = "LeadBitrix"

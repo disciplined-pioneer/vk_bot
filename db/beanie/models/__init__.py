@@ -2,5 +2,6 @@ from .models import *
 
 document_models = [
     MessagePost,
-    MessagePrivate
+    MessagePrivate,
+    LeadBitrix
 ]

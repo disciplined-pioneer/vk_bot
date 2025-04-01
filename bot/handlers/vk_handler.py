@@ -118,7 +118,7 @@ async def vk_callback():
                               article=9999999999999,
                               link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
                               params=order_info,
-                              count=1,
+                              count='1',
                               link_user=f"https://vk.com/id{user_id}")
         send_private_message(user_id, message_gpt)
 
