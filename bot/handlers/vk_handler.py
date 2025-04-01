@@ -61,13 +61,13 @@ async def vk_callback():
                                                    text_post=text_post)
             
         # Отправляем Лид, если он есть
-        message_gpt, order_info = parse_vk_bot_response(gpt_resp_text)
+        message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
             await create_lead(timestamp=date,
-                              article=9999999999999,
+                              article=article,
                               link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
                               params=order_info,
-                              count=1,
+                              count=count,
                               link_user=f"https://vk.com/id{user_id}")
         send_comment_reply(post_id, comment_id, message_gpt)
 
@@ -113,13 +113,13 @@ async def vk_callback():
             
         # Отправляем Лид, если он есть
         print(gpt_resp_text)
-        message_gpt, order_info = parse_vk_bot_response(gpt_resp_text)
+        message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
             await create_lead(timestamp=date,
-                              article=9999999999999,
+                              article=article,
                               link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
                               params=order_info,
-                              count='1',
+                              count=int(count),
                               link_user=f"https://vk.com/id{user_id}")
         send_private_message(user_id, message_gpt)
 
