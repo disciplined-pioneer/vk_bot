@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  bot:
+    build: .
+    container_name: vk-bot
+    env_file:
+      - .env
+    expose: 
+      - "5000:5000"
+    depends_on:
+      - mongo
+    networks:
+      - vk-bot-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    env_file:
+      - .env
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - vk-bot-network
+
+networks:
+  vk-bot-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
