@@ -2,7 +2,6 @@
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from settings import settings
-import asyncio
 
 from db.beanie.models.models import Test
 

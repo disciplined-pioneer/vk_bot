@@ -2,6 +2,8 @@ requests
 pyngrok
 beanie[odm]
 motor
-pydantic-settings
 quart
+fast-bitrix24
+pydantic
+pydantic-settings
 openai

@@ -120,7 +120,7 @@ class MessageHistoryPost:
 # Класс для сохранения истории личных сообщений
 class MessagePrivate(ModelAdmin):
 
-    from_id: Optional[int] = None
+    user_id: Optional[int] = None
     group_id: Optional[int] = None
     peer_id: Optional[int] = None
     id_message: Optional[int] = None

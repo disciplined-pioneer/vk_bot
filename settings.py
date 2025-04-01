@@ -15,8 +15,11 @@ class VkBot(BaseSettings):
 
 
 class MongoConfig(BaseSettings):
-    PORT: int
+    USER: str
+    PASSWORD: str
     HOST: str
+    PORT: str
+    AUTH_DB: str
 
     class Config:
         env_prefix = 'MONGO_'
@@ -25,7 +28,7 @@ class MongoConfig(BaseSettings):
 
     @property
     def URL(self) -> str:
-        return f"mongodb://{self.HOST}:{self.PORT}"
+        return f"mongodb://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.AUTH_DB}"
 
 
 class GptConfig(BaseSettings):

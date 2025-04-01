@@ -2,10 +2,11 @@ import re
 
 from quart import request
 from settings import settings
+
 from utils.vk_handler import *
+from integrations.bitrix.bitrix_lead import *
 from db.beanie.models.models import MessagePost, MessagePrivate
 
-from integrations.bitrix.bitrix_lead import *
 
 async def vk_callback():
 

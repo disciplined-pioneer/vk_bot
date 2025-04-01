@@ -34,7 +34,7 @@ async def create_lead(timestamp: float, link_post: str, article: str, count: str
                          link_post=link_post,
                          article=article,
                          link_user=link_user,
-                         lead_counts=count,
+                         lead_count=str(count),
                          params=params)
     
     except Exception as e:
