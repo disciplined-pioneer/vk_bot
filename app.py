@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     ngrok.set_auth_token(settings.ngrok.TOKEN)
     public_url = ngrok.connect(5000).public_url
-    print(f"Ngrok URL: {public_url}")
+    print(f"Ngrok URL: {public_url}", flush=True)
 
     # Запускаем сервер Quart
     app.run(host="0.0.0.0", port=5000)
