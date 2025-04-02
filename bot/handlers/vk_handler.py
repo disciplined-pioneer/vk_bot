@@ -63,12 +63,11 @@ async def vk_callback():
         # Отправляем Лид, если он есть
         message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
-            await create_lead(timestamp=date,
-                              article=article,
-                              link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
-                              params=order_info,
-                              count=count,
-                              link_user=f"https://vk.com/id{user_id}")
+            await process_user_request(link_user=f"https://vk.com/id{user_id}",
+                                       link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
+                                       count=str(count),
+                                       article=str(article),
+                                       params=order_info)
         send_comment_reply(post_id, comment_id, message_gpt)
 
 
@@ -112,15 +111,13 @@ async def vk_callback():
                                                    text_post=text_post)
             
         # Отправляем Лид, если он есть
-        print(gpt_resp_text)
         message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
-            await create_lead(timestamp=date,
-                              article=article,
-                              link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
-                              params=order_info,
-                              count=int(count),
-                              link_user=f"https://vk.com/id{user_id}")
+            await process_user_request(link_user=f"https://vk.com/id{user_id}",
+                                       link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
+                                       count=str(count),
+                                       article=str(article),
+                                       params=order_info)
         send_private_message(user_id, message_gpt)
 
 

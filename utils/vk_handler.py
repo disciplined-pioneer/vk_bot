@@ -18,7 +18,6 @@ def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
     # Синхронный запрос
     response = requests.post(url, params=params)
     data = response.json()  # Парсим JSON ответ
-    print(f"\nAPI: {data}")
     return data
 
 
@@ -36,7 +35,6 @@ def send_private_message(user_id: int, text: str) -> dict:
     # Синхронный запрос
     response = requests.post(url, params=params)
     data = response.json()  # Парсим JSON ответ
-    print(f"\nAPI: {data}")
     return data
 
 
