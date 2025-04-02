@@ -1,4 +1,4 @@
-import os
+from settings import settings
 from quart import Quart
 from pyngrok import ngrok
 from core.mongo import init_mongo
@@ -24,7 +24,7 @@ app.add_url_rule("/", "vk_callback", vk_callback, methods=["POST"])
 
 if __name__ == "__main__":
 
-    ngrok.set_auth_token(os.getenv("NGROK_AUTH_TOKEN"))
+    ngrok.set_auth_token(settings.ngrok.TOKEN)
     public_url = ngrok.connect(5000).public_url
     print(f"Ngrok URL: {public_url}")
 
