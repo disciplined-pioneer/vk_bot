@@ -13,15 +13,19 @@ services:
     networks:
       - vk-bot-network
 
-  mongo:
-    image: mongo:latest
-    container_name: mongo
-    env_file:
-      - .env
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - vk-bot-network
+    mongo:
+      image: mongo:latest
+      container_name: mongo
+      env_file:
+        - .env
+      environment:
+        - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+        - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      volumes:
+        - mongo-data:/data/db
+      networks:
+        - vk-bot-network
+
 
 networks:
   vk-bot-network:
