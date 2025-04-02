@@ -31,6 +31,15 @@ class MongoConfig(BaseSettings):
         return f"mongodb://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.AUTH_DB}"
 
 
+class NgrokConfig(BaseSettings):
+    TOKEN: str
+
+    class Config:
+        env_prefix = 'NGROK_'
+        env_file = '.env'
+        extra = 'ignore'
+
+
 class GptConfig(BaseSettings):
     API_KEY: str
     BASE_URL: str
@@ -56,5 +65,6 @@ class Settings:
     mongo = MongoConfig()
     gpt = GptConfig()
     bitrix24 = BitrixConfig()
+    ngrok = NgrokConfig()
 
 settings = Settings()
