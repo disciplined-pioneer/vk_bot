@@ -4,7 +4,7 @@ from quart import request
 from settings import settings
 
 from utils.vk_handler import *
-from integrations.bitrix.bitrix_lead import *
+from integrations.bitrix.bitrix_deal import *
 from db.beanie.models.models import MessagePost, MessagePrivate
 
 
@@ -69,7 +69,6 @@ async def vk_callback():
                                        article=str(article),
                                        params=order_info)
         send_comment_reply(post_id, comment_id, message_gpt)
-
 
 
     # Обрабатываем ЛС пользователя
@@ -151,4 +150,3 @@ async def vk_callback():
         pass
 
     return "ok"
-

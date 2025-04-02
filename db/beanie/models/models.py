@@ -158,7 +158,7 @@ class MessageHistoryPrivate:
 
 
 # Класс для сохранения лидов
-class LeadBitrix(ModelAdmin):
+class DealBitrix(ModelAdmin):
 
     date: Optional[int] = None
     link_post: Optional[str] = None
@@ -168,4 +168,4 @@ class LeadBitrix(ModelAdmin):
     params: Optional[str] = None
 
     class Settings:
-        name = "LeadBitrix"
+        name = "DealBitrix"

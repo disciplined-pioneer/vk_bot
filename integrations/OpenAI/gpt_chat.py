@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
-from db.beanie.models.models import MessageHistoryPost, MessageHistoryPrivate
 from typing import Optional
+from db.beanie.models.models import MessageHistoryPost, MessageHistoryPrivate
 
 # Класс для общения с GPT
 class GPTChat:

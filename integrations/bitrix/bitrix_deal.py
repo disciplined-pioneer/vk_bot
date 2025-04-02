@@ -1,6 +1,7 @@
 import time
 import fast_bitrix24
 from settings import settings
+from db.beanie.models.models import DealBitrix
 
 # Получает все контакты
 async def get_all_contacts():
@@ -10,7 +11,7 @@ async def get_all_contacts():
         contacts = await bit.get_all('crm.contact.list', {
             'select': ['ID', 'NAME', 'LAST_NAME', 'UF_CRM_1742556149']
         })
-        sorted_contacts = sorted(contacts, key=lambda x: x['ID'], reverse=True)
+        sorted_contacts = sorted(contacts, key=lambda x: int(x['ID']), reverse=True)
         return sorted_contacts
     
     except Exception as e:
@@ -58,14 +59,15 @@ async def create_contact(link_user: str):
 
 
 # Создаёт сделку и привязывает к контакту
-async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str):
+async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str):
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
 
+    date = int(time.time())
     deal_data = {
         'fields': {
             "TITLE": "ВК БОТ ТЕСТ 2", 
             "CONTACT_ID": contact_id,  # Привязка к контакту
-            "UF_CRM_1742556368": int(time.time()),
+            "UF_CRM_1742556368": date,
             "UF_CRM_1742556254": link_post,
             "UF_CRM_1742556276": int(article),
             "UF_CRM_1742556311": int(count),
@@ -87,6 +89,14 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
         else:
             print(f"Неожиданный формат ответа при создании сделки: {deal_id}")
 
+        # Добавляем в БД
+        await DealBitrix.create(date=date,
+                                link_post=link_post,
+                                article=article,
+                                link_user=link_user,
+                                lead_count=count,
+                                params=params)
+
     except Exception as e:
         print(f"Ошибка при создании сделки: {e}")
 
@@ -97,7 +107,7 @@ async def process_user_request(link_user: str, link_post: str, article: str, cou
     contact_id = await create_contact(link_user)
 
     if contact_id:
-        await create_deal(contact_id, link_post, article, count, params)
+        await create_deal(contact_id, link_post, article, count, params, link_user)
     else:
         print("Не удалось создать контакт, сделка не будет создана")
 
