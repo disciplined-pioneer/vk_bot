@@ -6,3 +6,4 @@ fast-bitrix24
 pydantic
 pydantic-settings
 openai
+pyngrok
