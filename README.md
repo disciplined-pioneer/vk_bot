@@ -23,6 +23,8 @@
 
 - GPT_API_KEY: Ключ API для доступа к OpenAI (ChatGPT).
 - GPT_BASE_URL: Базовый URL для подключения к API OpenAI (например, `https://api.proxyapi.ru/openai/v1`).
+
+- NGROK_TOKEN: вставьте свой ключ от NGROK
 ```
 
 ## Инструкция по настройке бота ВКонтакте
