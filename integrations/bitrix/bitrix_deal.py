@@ -1,6 +1,7 @@
 import time
 import fast_bitrix24
 from settings import settings
+from db.beanie.models.models import DealBitrix
 
 # Получает все контакты
 async def get_all_contacts():
@@ -88,6 +89,14 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
 
         else:
             print(f"Неожиданный формат ответа при создании сделки: {deal_id}")
+
+        # Добавляем в БД
+        await DealBitrix.create(date=date,
+                                link_post=link_post,
+                                article=article,
+                                link_user=link_user,
+                                lead_count=count,
+                                params=params)
 
 
     except Exception as e:
