@@ -71,9 +71,9 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
             "UF_CRM_1742556276": int(article),
             "UF_CRM_1742556311": int(count),
             "UF_CRM_1742556333": params,
-            "COMMENTS": link_user,
             "UF_CRM_1726722554939": "ВК БОТ",
-            "STAGE_ID": "NEW", 
+            "STAGE_ID": "NEW"
+            #"COMMENTS": link_user,
         }
     }
 
