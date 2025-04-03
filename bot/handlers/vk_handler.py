@@ -3,6 +3,8 @@ import re
 from quart import request
 from settings import settings
 
+from services.cache import handle_comment
+
 from utils.vk_handler import *
 from integrations.bitrix.bitrix_deal import *
 from db.beanie.models.models import MessagePost, MessagePrivate
@@ -35,6 +37,10 @@ async def vk_callback():
         
         # Определяем тип сообщения
         message_type = 'assistant' if user_id == settings.vk_bot.GROUP_ID else 'user'
+
+        # Проверка на существование комментария в кэше и его добавление
+        if await handle_comment(f"comment_{comment_id}"):
+            return "ok"
 
         # Асинхронное добавление истории
         await MessagePost.create(
@@ -81,6 +87,10 @@ async def vk_callback():
         message_type = 'user'
         content = data["object"]["message"]["text"]
         date = data["object"]["message"]["date"]
+
+        # Проверка на существование комментария в кэше и его добавление
+        if await handle_comment(f"comment_{id_message}"):
+            return "ok"
 
         # Текст поста, который переслали, если есть
         try:
