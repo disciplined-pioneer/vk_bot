@@ -1,3 +1,4 @@
+import re
 import time
 import fast_bitrix24
 from settings import settings
@@ -60,17 +61,18 @@ async def create_contact(link_user: str):
 
 # Создаёт сделку и привязывает к контакту
 async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str):
+    
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
-
     date = int(time.time())
+    article = re.sub(r"\D", "", article)
     deal_data = {
         'fields': {
             "TITLE": "ВК БОТ", 
             "CONTACT_ID": contact_id,  # Привязка к контакту
             "UF_CRM_1742556368": date,
             "UF_CRM_1742556254": link_post,
-            "UF_CRM_1742556276": int(article),
-            "UF_CRM_1742556311": int(count),
+            "UF_CRM_1742556276": article,
+            "UF_CRM_1742556311": count,
             "UF_CRM_1742556333": params,
             "UF_CRM_1726722554939": "ВК БОТ",
             "STAGE_ID": "NEW"

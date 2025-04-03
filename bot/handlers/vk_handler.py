@@ -60,12 +60,15 @@ async def vk_callback():
         
         # Запрос в GPT
         text_post = get_post_text(post_id)
+        print(f"\nТекст поста: {text_post}\n")
+        comment_text = f"\nТекст поста: {text_post}\n" + f"ТЕКСТ ПОЛЬЗОВАТЕЛЯ: {comment_text}"
         gpt_resp_text = await process_gpt_response(source='post',
                                                    user_id=user_id,
                                                    user_input=comment_text,
                                                    id_value=parent_id,
                                                    text_post=text_post)
-            
+        print(f"\nТекст GPT: {gpt_resp_text}\n")
+
         # Отправляем Лид, если он есть
         message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
@@ -113,12 +116,15 @@ async def vk_callback():
         )
     
         # Запрос в GPT
+        print(f"\nТест поста: {text_post}\n")
+        content = f"\nТекст поста: {text_post}\n" + f"ТЕКСТ ПОЛЬЗОВАТЕЛЯ: {content}"
+
         gpt_resp_text = await process_gpt_response(source='private',
                                                    user_id=user_id,
                                                    user_input=content,
                                                    id_value=user_id,
                                                    text_post=text_post)
-            
+        print(f"\nТекст GPT: {gpt_resp_text}\n")
         # Отправляем Лид, если он есть
         message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
