@@ -62,11 +62,14 @@ def parse_vk_bot_response(text: str):
     # Отделяем сообщение от блока с JSON-полями
     split_index = text.find('```')
     message = text[:split_index].strip() if split_index != -1 else text.strip()
-
+    
+    # Проверяем, есть ли текст после блока с кодом (возможное пустое значение)
+    json_block = text[split_index + 3:].strip() if split_index != -1 else ""
+    
     # Парсим значения из JSON-блока
-    order_info_match = re.search(r'"UF_CRM_1742556333":\s*"(.+?)"', text)
-    article_match = re.search(r'"UF_CRM_1742556276":\s*"(.+?)"', text)
-    count_match = re.search(r'"UF_CRM_1742556311":\s*"(.+?)"', text)
+    order_info_match = re.search(r'"UF_CRM_1742556333":\s*"(.+?)"', json_block)
+    article_match = re.search(r'"UF_CRM_1742556276":\s*"(.+?)"', json_block)
+    count_match = re.search(r'"UF_CRM_1742556311":\s*"(.+?)"', json_block)
 
     order_info = order_info_match.group(1) if order_info_match else None
     article = article_match.group(1) if article_match else None
