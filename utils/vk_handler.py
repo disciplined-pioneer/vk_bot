@@ -59,16 +59,19 @@ def get_post_text(post_id: int) -> str:
 
 # Извлекает сообщение бота и значение UF_CRM_1742556333 из текста
 def parse_vk_bot_response(text: str):
+    # Отделяем сообщение от блока с JSON-полями
+    split_index = text.find('```')
+    message = text[:split_index].strip() if split_index != -1 else text.strip()
+
+    # Парсим значения из JSON-блока
     order_info_match = re.search(r'"UF_CRM_1742556333":\s*"(.+?)"', text)
     article_match = re.search(r'"UF_CRM_1742556276":\s*"(.+?)"', text)
     count_match = re.search(r'"UF_CRM_1742556311":\s*"(.+?)"', text)
-    
+
     order_info = order_info_match.group(1) if order_info_match else None
     article = article_match.group(1) if article_match else None
     count = count_match.group(1) if count_match else None
-    
-    message = text.split("\n")[0]  # Первое предложение до пустой строки
-    
+
     return message, article, count, order_info
 
 

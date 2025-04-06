@@ -22,6 +22,7 @@ async def vk_callback():
     if data["type"] == "confirmation":
         return settings.vk_bot.CONFIRMATION
 
+
     # Обрабатываем новый комментарий
     if data["type"] == "wall_reply_new":
         user_id = data["object"]["from_id"]
