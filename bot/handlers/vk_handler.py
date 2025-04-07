@@ -30,8 +30,8 @@ async def vk_callback():
 
         message_type = 'assistant' if user_id == settings.vk_bot.GROUP_ID else 'user'
 
-        """if await handle_comment(f"comment_{comment_id}"):
-            return "ok"""
+        if await handle_comment(f"comment_{comment_id}"):
+            return "ok"
 
         await MessagePost.create(
             post_id=post_id,
@@ -48,7 +48,7 @@ async def vk_callback():
             return "ok"
 
         text_post = await get_post_text(post_id)
-        comment_text_full = f"\nТекст поста: {text_post}\nТЕКСТ ПОЛЬЗОВАТЕЛЯ: {comment_text}"
+        comment_text_full = f"\nТекст поста: {text_post}. Определи все цвета, что тут есть и если он один, то сразу записывай! \nТЕКСТ ПОЛЬЗОВАТЕЛЯ: {comment_text}"
 
         gpt_resp_text = await process_gpt_response(
             source='private',
@@ -102,7 +102,7 @@ async def vk_callback():
             content=content,
             date=date,
         )
-        content_full = f"\nТекст поста: {text_post}\nТЕКСТ ПОЛЬЗОВАТЕЛЯ: {content}"
+        content_full = f"\nТекст поста: {text_post}. Определи все цвета, что тут есть и если он один, то сразу записывай! \nТЕКСТ ПОЛЬЗОВАТЕЛЯ: {comment_text}"
 
         gpt_resp_text = await process_gpt_response(
             source='private',
