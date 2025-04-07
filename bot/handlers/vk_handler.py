@@ -1,30 +1,21 @@
-import re
-
 from quart import request
 from settings import settings
+import re
 
 from services.cache import handle_comment
-
 from utils.vk_handler import *
 from integrations.bitrix.bitrix_deal import *
 from db.beanie.models.models import MessagePost, MessagePrivate
 
-
 async def vk_callback():
-
     data = await request.json
-    print(f"Полученные данные: {data}")
 
-    # Проверяем секретный ключ
     if "secret" in data and data["secret"] != settings.vk_bot.SECRET:
         return "Invalid secret", 403
 
-    # Подтверждение сервера ВК
     if data["type"] == "confirmation":
         return settings.vk_bot.CONFIRMATION
 
-
-    # Обрабатываем новый комментарий
     if data["type"] == "wall_reply_new":
         user_id = data["object"]["from_id"]
         group_id = data["group_id"]
@@ -36,15 +27,12 @@ async def vk_callback():
 
         comment_text = re.sub(r'\[.*?\]\s*,?\s*', '', data["object"]["text"])
         comment_id = data["object"]["id"]
-        
-        # Определяем тип сообщения
+
         message_type = 'assistant' if user_id == settings.vk_bot.GROUP_ID else 'user'
 
-        # Проверка на существование комментария в кэше и его добавление
-        if await handle_comment(f"comment_{comment_id}"):
-            return "ok"
+        """if await handle_comment(f"comment_{comment_id}"):
+            return "ok"""
 
-        # Асинхронное добавление истории
         await MessagePost.create(
             post_id=post_id,
             group_id=group_id,
@@ -56,51 +44,47 @@ async def vk_callback():
             date=date
         )
 
-        # Если комментарий от бота, возвращаем "ok"
         if message_type == 'assistant':
             return "ok"
-        
-        # Запрос в GPT
-        text_post = await get_post_text(post_id)
-        print(f"\nТекст поста: {text_post}\n")
-        comment_text = f"\nТекст поста: {text_post}\n" + f"ТЕКСТ ПОЛЬЗОВАТЕЛЯ: {comment_text}"
-    
-        gpt_resp_text = await process_gpt_response(source='private',
-                                                   user_id=user_id,
-                                                   user_input=content,
-                                                   id_value=user_id,
-                                                   text_post=text_post)
-        
-        print(f"\nТекст GPT: {gpt_resp_text}\n")
 
-        # Отправляем Лид, если он есть
+        text_post = await get_post_text(post_id)
+        comment_text_full = f"\nТекст поста: {text_post}\nТЕКСТ ПОЛЬЗОВАТЕЛЯ: {comment_text}"
+
+        gpt_resp_text = await process_gpt_response(
+            source='private',
+            user_id=user_id,
+            user_input=comment_text_full,
+            id_value=user_id,
+            text_post=text_post
+        )
+
+        print(comment_text)
+        #print(f"\nТекст GPT: {gpt_resp_text}\n")
+
         message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
-            await process_user_request(link_user=f"https://vk.com/id{user_id}",
-                                       link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
-                                       count=str(count),
-                                       article=str(article),
-                                       params=order_info)
+            await process_user_request(
+                link_user=f"https://vk.com/id{user_id}",
+                link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
+                count=str(count),
+                article=str(article),
+                params=order_info
+            )
+
         await send_comment_reply(post_id, comment_id, message_gpt)
         return "ok"
 
-
-    # Обрабатываем ЛС пользователя
     elif data["type"] == "message_new":
         user_id = data["object"]["message"]["from_id"]
         group_id = data["group_id"]
         id_message = data["object"]["message"]["id"]
         peer_id = data["object"]["message"]["peer_id"]
-        
-        message_type = 'user'
         content = data["object"]["message"]["text"]
         date = data["object"]["message"]["date"]
 
-        # Проверка на существование комментария в кэше и его добавление
         if await handle_comment(f"comment_{id_message}"):
             return "ok"
 
-        # Текст поста, который переслали, если есть
         try:
             post_inf = data["object"]["message"]["attachments"][0]["wall"]
             post_id = post_inf["id"]
@@ -109,66 +93,56 @@ async def vk_callback():
         except:
             text_post = ''
 
-        # Асинхронное добавление истории
         await MessagePrivate.create(
             user_id=user_id,
             group_id=group_id,
             peer_id=peer_id,
             id_message=id_message,
-            message_type=message_type,
+            message_type='user',
             content=content,
             date=date,
         )
-    
-        # Запрос в GPT
-        print(f"\nТест поста: {text_post}\n")
-        content = f"\nТекст поста: {text_post}\n" + f"ТЕКСТ ПОЛЬЗОВАТЕЛЯ: {content}"
+        content_full = f"\nТекст поста: {text_post}\nТЕКСТ ПОЛЬЗОВАТЕЛЯ: {content}"
 
-        gpt_resp_text = await process_gpt_response(source='private',
-                                                   user_id=user_id,
-                                                   user_input=content,
-                                                   id_value=user_id,
-                                                   text_post=text_post)
-        print(f"\nТекст GPT: {gpt_resp_text}\n")
-        # Отправляем Лид, если он есть
+        gpt_resp_text = await process_gpt_response(
+            source='private',
+            user_id=user_id,
+            user_input=content_full,
+            id_value=user_id,
+            text_post=text_post
+        )
+       
+
         message_gpt, article, count, order_info = parse_vk_bot_response(gpt_resp_text)
         if order_info is not None:
-            await process_user_request(link_user=f"https://vk.com/id{user_id}",
-                                       link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
-                                       count=str(count),
-                                       article=str(article),
-                                       params=order_info)
+            await process_user_request(
+                link_user=f"https://vk.com/id{user_id}",
+                link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
+                count=str(count),
+                article=str(article),
+                params=order_info
+            )
         await send_private_message(user_id, message_gpt)
         return "ok"
 
-
-    # Обрабатываем ответ бота на ЛС
     elif data["type"] == "message_reply":
-        
-        user_id =  data["object"]["from_id"]
+        user_id = data["object"]["from_id"]
         group_id = data["group_id"]
         peer_id = data["object"]["peer_id"]
         id_message = data["object"]["id"]
-        
-        message_type = 'assistant'
         content = data["object"]["text"]
         date = data["object"]["date"]
-        
-        # Асинхронное добавление истории
+
         await MessagePrivate.create(
             user_id=user_id,
             group_id=group_id,
             peer_id=peer_id,
             id_message=id_message,
-            message_type=message_type,
+            message_type='assistant',
             content=content,
             date=date,
         )
-        
+
         return "ok"
-
-
-    else:
-        pass
 
     return "ok"

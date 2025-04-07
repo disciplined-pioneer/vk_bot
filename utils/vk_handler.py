@@ -17,8 +17,9 @@ async def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
         "v": "5.199"
     }
 
+    # Игнорируем SSL-проверку, устанавливаем параметр ssl=False
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, params=params) as response:
+        async with session.post(url, params=params, ssl=False) as response:
             return await response.json()
 
 
@@ -33,7 +34,8 @@ async def send_private_message(user_id: int, text: str) -> dict:
         "random_id": 0
     }
 
-    async with httpx.AsyncClient() as client:
+    # Используем httpx с параметром ssl=False для игнорирования проверки SSL-сертификатов
+    async with httpx.AsyncClient(verify=False) as client:
         response = await client.post(url, params=params)
         return response.json()
 
@@ -51,7 +53,8 @@ async def get_post_text(post_id: int) -> str:
         "v": "5.131"
     }
 
-    async with httpx.AsyncClient() as client:
+    # Используем httpx с параметром ssl=False для игнорирования проверки SSL-сертификатов
+    async with httpx.AsyncClient(verify=False) as client:
         response = await client.get(url, params=params)
         data = response.json()
 
