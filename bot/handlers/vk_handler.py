@@ -60,7 +60,7 @@ async def vk_callback():
             return "ok"
         
         # Запрос в GPT
-        text_post = get_post_text(post_id)
+        text_post = await get_post_text(post_id)
         print(f"\nТекст поста: {text_post}\n")
         comment_text = f"\nТекст поста: {text_post}\n" + f"ТЕКСТ ПОЛЬЗОВАТЕЛЯ: {comment_text}"
         gpt_resp_text = await process_gpt_response(source='post',
@@ -78,7 +78,8 @@ async def vk_callback():
                                        count=str(count),
                                        article=str(article),
                                        params=order_info)
-        send_comment_reply(post_id, comment_id, message_gpt)
+        await send_comment_reply(post_id, comment_id, message_gpt)
+        return "ok"
 
 
     # Обрабатываем ЛС пользователя
@@ -134,7 +135,8 @@ async def vk_callback():
                                        count=str(count),
                                        article=str(article),
                                        params=order_info)
-        send_private_message(user_id, message_gpt)
+        await send_private_message(user_id, message_gpt)
+        return "ok"
 
 
     # Обрабатываем ответ бота на ЛС

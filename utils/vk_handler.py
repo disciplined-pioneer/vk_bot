@@ -1,10 +1,12 @@
 import re
+import httpx
+import aiohttp
 import requests
 from settings import settings
 from integrations.OpenAI.gpt_chat import GPTChat
 
 # Функция для ответа на комментарий
-def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
+async def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
     url = "https://api.vk.com/method/wall.createComment"
     params = {
         "owner_id": settings.vk_bot.GROUP_ID,
@@ -15,43 +17,46 @@ def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
         "v": "5.199"
     }
 
-    # Синхронный запрос
-    response = requests.post(url, params=params)
-    data = response.json()  # Парсим JSON ответ
-    return data
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, params=params) as response:
+            return await response.json()
 
 
 # Функция для ответа на личное сообщение
-def send_private_message(user_id: int, text: str) -> dict:
+async def send_private_message(user_id: int, text: str) -> dict:
     url = "https://api.vk.com/method/messages.send"
     params = {
-        "peer_id": user_id, 
-        "message": text,     
+        "peer_id": user_id,
+        "message": text,
         "access_token": settings.vk_bot.ACCESS_TOKEN,
-        "v": "5.199",    
-        "random_id": 0    
+        "v": "5.199",
+        "random_id": 0
     }
 
-    # Синхронный запрос
-    response = requests.post(url, params=params)
-    data = response.json()  # Парсим JSON ответ
-    return data
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, params=params)
+        return response.json()
 
 
 # Функция для получения текста поста
-def get_post_text(post_id: int) -> str:
+async def get_post_text(post_id: int) -> str:
     access_token = settings.vk_bot.APP_TOKEN
     owner_id = settings.vk_bot.GROUP_ID
     posts = f'{owner_id}_{post_id}'
 
-    url = f'https://api.vk.com/method/wall.getById?posts={posts}&access_token={access_token}&v=5.131'
+    url = f'https://api.vk.com/method/wall.getById'
+    params = {
+        "posts": posts,
+        "access_token": access_token,
+        "v": "5.131"
+    }
 
-    response = requests.get(url)
-    data = response.json()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=params)
+        data = response.json()
 
     if 'response' in data:
-        post_text = data['response'][0]['text']
-        return post_text
+        return data['response'][0]['text']
     else:
         print("Ошибка при получении данных:", data)
         return ""
@@ -59,6 +64,7 @@ def get_post_text(post_id: int) -> str:
 
 # Извлекает сообщение бота и значение UF_CRM_1742556333 из текста
 def parse_vk_bot_response(text: str):
+
     # Отделяем сообщение от блока с JSON-полями
     split_index = text.find('```')
     message = text[:split_index].strip() if split_index != -1 else text.strip()
@@ -76,7 +82,6 @@ def parse_vk_bot_response(text: str):
     count = count_match.group(1) if count_match else None
 
     return message, article, count, order_info
-
 
 
 # Обрабатывает запрос к GPT и возвращает ответ.
