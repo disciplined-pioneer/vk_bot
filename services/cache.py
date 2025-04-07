@@ -2,30 +2,33 @@ import asyncio
 from aiocache import SimpleMemoryCache
 
 cache = SimpleMemoryCache()
+lock = asyncio.Lock()
 
-MAX_CACHE_SIZE = 30  # макс. 30 комм.
-TTL = 300  # 5 мин - врем хранения
+MAX_CACHE_SIZE = 30  # макс. 30 комментариев
+TTL = 300  # 5 минут
 
-
-# Проверка существования комментария в кэше
 async def handle_comment(comment_id: str) -> bool:
+    async with lock:
+        key = f"comment_{comment_id}"
 
-    if await cache.get(f"comment_{comment_id}") is not None:
-        return True
-    
-    # Добавляем comment_id в кэш
-    await cache.set(f"comment_{comment_id}", True, ttl=TTL)
+        if await cache.get(key) is not None:
+            return True
 
-    # Список последних комментариев
-    recent_comments = await cache.get("recent_comments") or []
-    recent_comments.append(comment_id)
+        # Добавляем в кэш новый комментарий
+        await cache.set(key, True, ttl=TTL)
 
-    # Ограничиваем список
-    if len(recent_comments) > MAX_CACHE_SIZE:
-        removed = recent_comments.pop(0)
-        await cache.delete(f"comment_{removed}")  # Удаляем старый комментарий
+        # Получаем список последних комментариев
+        recent_comments = await cache.get("recent_comments") or []
 
-    # Обновляем кэш с новым списком комментариев
-    await cache.set("recent_comments", recent_comments, ttl=TTL)
+        # Обновляем список
+        recent_comments.append(comment_id)
 
-    return False
+        # Ограничиваем размер списка
+        if len(recent_comments) > MAX_CACHE_SIZE:
+            removed_comment = recent_comments.pop(0)
+            await cache.delete(f"comment_{removed_comment}")  # удаляем устаревший ключ
+
+        # Обновляем список в кэше (без TTL, живёт вечно)
+        await cache.set("recent_comments", recent_comments)
+
+        return False
