@@ -6,7 +6,7 @@ from db.beanie.models.models import MessageHistoryPost, MessageHistoryPrivate
 # Класс для общения с GPT
 class GPTChat:
 
-    def __init__(self, api_key: str, base_url: str, model: str = "gpt-4o", source: str = "post"):
+    def __init__(self, api_key: str, base_url: str, model: str = "gpt-4o-mini", source: str = "post"):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
         self.history: list[dict[str, str]] = []  # История чата
