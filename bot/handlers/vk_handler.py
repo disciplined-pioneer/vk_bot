@@ -68,6 +68,7 @@ async def vk_callback():
                 id_value=user_id,
                 text_post=text_post
             )
+            gpt_resp_text = "ЭТО ТЕСТОВЫЙ ОТВЕТ"
 
             print(comment_text)
             print(f"\nТекст GPT: {gpt_resp_text}\n")
