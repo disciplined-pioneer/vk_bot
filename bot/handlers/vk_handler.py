@@ -79,7 +79,8 @@ async def vk_callback():
                     link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
                     count=str(count),
                     article=str(article),
-                    params=order_info
+                    params=order_info,
+                    comment=comment_text
                 )
             await send_comment_reply(post_id, comment_id, message_gpt)
             return "ok"
@@ -132,7 +133,8 @@ async def vk_callback():
                     link_post=f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}",
                     count=str(count),
                     article=str(article),
-                    params=order_info
+                    params=order_info,
+                    comment=comment_text
                 )
             await send_private_message(user_id, message_gpt)
             return "ok"

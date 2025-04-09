@@ -60,7 +60,7 @@ async def create_contact(link_user: str):
 
 
 # Создаёт сделку и привязывает к контакту
-async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str):
+async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str):
     
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
     date = int(time.time())
@@ -74,7 +74,7 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
             "UF_CRM_1742556276": article,
             "UF_CRM_1742556311": count,
             "UF_CRM_1742556333": params,
-            "UF_CRM_1726722554939": "ВК БОТ",
+            "UF_CRM_1726722554939": comment,
             "STAGE_ID": "NEW"
         }
     }
@@ -105,11 +105,11 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
 
 
 # Обрабатывает запрос пользователя: создаёт контакт (если нет), создаёт и привязывает к нему сделку
-async def process_user_request(link_user: str, link_post: str, article: str, count: str, params: str):
+async def process_user_request(link_user: str, link_post: str, article: str, count: str, params: str, comment: str):
 
     contact_id = await create_contact(link_user)
 
     if contact_id:
-        await create_deal(contact_id, link_post, article, count, params, link_user)
+        await create_deal(contact_id, link_post, article, count, params, link_user, comment)
     else:
         print("Не удалось создать контакт, сделка не будет создана")
