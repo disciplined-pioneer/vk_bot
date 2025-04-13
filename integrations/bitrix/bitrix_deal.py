@@ -2,6 +2,7 @@ import re
 import time
 import fast_bitrix24
 from settings import settings
+from datetime import datetime, timezone
 from db.beanie.models.models import DealBitrix
 
 # Получает все контакты
@@ -63,7 +64,7 @@ async def create_contact(link_user: str):
 async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str):
     
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
-    date = int(time.time())
+    date = datetime.now(timezone.utc).isoformat()
     article = re.sub(r"\D", "", article)
     deal_data = {
         'fields': {
