@@ -1,9 +1,9 @@
 import re
-import time
 import fast_bitrix24
 from settings import settings
 from datetime import datetime, timezone
 from db.beanie.models.models import DealBitrix
+
 
 # Получает все контакты
 async def get_all_contacts():
@@ -21,17 +21,27 @@ async def get_all_contacts():
         return []
 
 
-# Создаёт контакт в Bitrix24 или возвращает ID существующего контакта
-async def create_contact(link_user: str):
+# Проверка на наличие контакта
+async def checking_contact(link_user):
 
     # Проверяем, существует ли контакт с таким link_user
-    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
     all_contacts = await get_all_contacts()
 
     for contact in all_contacts:
         if contact['UF_CRM_1742556149'] == link_user:
             print(f"Контакт с link_user={link_user} уже существует. ID: {contact['ID']}")
             return contact['ID']
+    return False
+
+
+# Создаёт контакт в Bitrix24 или возвращает ID существующего контакта
+async def create_contact(link_user: str):
+    
+    # Проверка на наличие контакта
+    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
+    contact_id = await checking_contact(link_user)
+    if contact_id:
+        return contact_id
 
     # Если контакт не найден, создаём новый
     contact_data = {
@@ -64,7 +74,7 @@ async def create_contact(link_user: str):
 async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str):
     
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
-    date = datetime.now(timezone.utc).isoformat()
+    date = int(datetime.now(timezone.utc).timestamp() * 1000)
     article = re.sub(r"\D", "", article)
     deal_data = {
         'fields': {

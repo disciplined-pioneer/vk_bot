@@ -1,47 +1,19 @@
-import asyncio
-import fast_bitrix24
-from settings import settings
+import requests
 
-fields = [
-    "TITLE",
-    "CONTACT_ID",
-    "UF_CRM_1742556368",
-    "UF_CRM_1742556254",
-    "UF_CRM_1742556276",
-    "UF_CRM_1742556311",
-    "UF_CRM_1742556333",
-    "UF_CRM_1726722554939",
-    "STAGE_ID"
-]
+VK_ACCESS_TOKEN="vk1.a.Ky0wxlpHEU97ml2RH8nUXGRw5zBSXMLmRHFCeTbJH4FM6_T4Mrl_k7YtPjq9rYvbAoP5jkMTydVFlWk2aPhgl5Q-aZ7DWMu4hCMIMb7OgAHBdis8Ls2sM0SenAfXKF3FmhcWpQnaSEcpKkvQnX6S4aOG3-PTdj6hBIR4HHTck93zWkRyErb5xGsMzZta9v3yRTdotFiRN9dw1fxgmKRCug"
 
+USER_ID = 503427794  # id пользователя
+COUNT = 20  # сколько сообщений получить
 
-# Получает последние 5 сделок с полным набором полей
-async def get_last_5_deals():
-    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
-    try:
-        # Получаем все сделки с полным набором полей
-        deals = await bit.get_all('crm.deal.list', {
-            'select': fields
-        })
+params = {
+    'access_token': VK_ACCESS_TOKEN,
+    'v': '5.154',
+    'user_id': USER_ID,
+    'count': COUNT
+}
 
-        # Сортируем по убыванию ID (последние — с наибольшим ID)
-        sorted_deals = sorted(deals, key=lambda x: int(x['ID']), reverse=True)
+response = requests.get('https://api.vk.com/method/messages.getHistory', params=params)
+data = response.json()
 
-        # Берём только последние 5 сделок
-        last_5_deals = sorted_deals[:5]
-
-        # Выводим каждую сделку
-        for i, deal in enumerate(last_5_deals, 1):
-            print(f"\nСделка #{i}")
-            for key, value in deal.items():
-                print(f"{key}: {value}")
-
-        return last_5_deals
-
-    except Exception as e:
-        print(f"Ошибка при получении сделок: {e}")
-        return []
-    
-
-
-asyncio.run(get_last_5_deals())
+for msg in data['response']['items']:
+    print(f"[{msg['from_id']}]: {msg['text']}")

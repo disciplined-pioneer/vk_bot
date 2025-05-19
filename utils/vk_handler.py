@@ -92,8 +92,9 @@ async def get_post_text(post_id: int) -> str:
             return ""
 
 
-# Извлекает сообщение бота и значение UF_CRM_1742556333 из текста
+# Извлекает сообщение бота и значение UF_CRM из текста
 def parse_vk_bot_response(text: str):
+
     # Отделяем сообщение от блока с JSON-полями
     split_index = text.find('```')
     message = text[:split_index].strip() if split_index != -1 else text.strip()
