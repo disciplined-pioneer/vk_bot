@@ -25,7 +25,7 @@ async def cancel_expired_exchanges():
     # Если контакта нет, то пользователь не написал после "Хочу"
     result = await MessageHistoryPost.get_post_user_map_from_parents()
     for post_id, (comment_id, user_id) in result.items():
-        link_user = f'https://vk.com/id{user_id}9999999999'
+        link_user = f'https://vk.com/id{user_id}'
         if not await checking_contact(link_user):
             await send_comment_reply(post_id=post_id, comment_id=comment_id, text='Вы начали оформление заказа, но пока не подтвердили его. Пожалуйста, напишите «Хочу» в личные сообщения, чтобы мы могли завершить оформление и сохранить товар за вами.')
 
