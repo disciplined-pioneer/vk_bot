@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 from beanie import Document
 from typing import List, Dict, Optional
@@ -184,6 +185,39 @@ class MessageHistoryPost:
 
         return result
 
+
+    @classmethod
+    async def auto_cleanup_old_messages(cls) -> int:
+        """
+        Ищет все сообщения, дата которых >= 2 дня назад,
+        и у которых есть comment_id или parent_id.
+        Удаляет их с помощью delete_related_messages().
+        Возвращает общее количество удалённых сообщений.
+        """
+        now = int(time.time())
+        cutoff = now - 2 * 24 * 60 * 60  # 2 дня в секундах
+
+        # Шаг 1: Найти все устаревшие сообщения
+        old_messages = await MessagePost.find({
+            "date": {"$lte": cutoff},
+            "$or": [
+                {"comment_id": {"$ne": None}},
+                {"parent_id": {"$ne": None}}
+            ]
+        }).to_list()
+
+        deleted_total = 0
+
+        # Шаг 2: Удаляем каждое сообщение через delete_related_messages
+        for msg in old_messages:
+            target_id = msg.comment_id if msg.comment_id is not None else msg.parent_id
+            if target_id is None or msg.post_id is None or msg.group_id is None:
+                continue  # пропускаем некорректные записи
+
+            deleted = await cls.delete_related_messages(target_id, msg.post_id, msg.group_id)
+            deleted_total += deleted
+
+        return deleted_total
 
 
 # Класс для сохранения лидов
