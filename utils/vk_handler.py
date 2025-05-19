@@ -7,6 +7,7 @@ from integrations.OpenAI.gpt_chat import GPTChat
 
 # Функция для ответа на комментарий
 async def send_comment_reply(post_id: int, comment_id: int, text: str) -> dict:
+    
     url = "https://api.vk.com/method/wall.createComment"
     params = {
         "owner_id": settings.vk_bot.GROUP_ID,

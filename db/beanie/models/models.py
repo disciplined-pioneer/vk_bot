@@ -91,21 +91,24 @@ class MessagePost(ModelAdmin):
 # Этот класс получения истории сообщений
 class MessageHistoryPost:
 
+
     @classmethod
     async def get_dialog_history(cls, parent_id: int, user_id: int) -> List[Dict[str, str]]:
-        # Получаем все сообщения с parent_id или comment_id == parent_id
+        
+        """Возвращает историю диалога (список сообщений) по заданному `parent_id` и `user_id`."""
+
         messages = await MessagePost.find(
-            {"$or": [
-                {"parent_id": parent_id},
-                {"comment_id": parent_id}
+            {
+                "$or": [
+                    {"parent_id": parent_id},
+                    {"comment_id": parent_id}
                 ],
-            "$and": [
-                {"user_id": user_id}
-            ]
+                "$and": [
+                    {"user_id": user_id}
+                ]
             }
         ).sort("timestamp").to_list()
 
-        # Формируем историю
         history = []
         for msg in messages:
             role = "user" if msg.message_type == "user" else "assistant"
@@ -115,6 +118,54 @@ class MessageHistoryPost:
             })
 
         return history
+
+
+    @classmethod
+    async def delete_related_messages(
+        cls,
+        target_id: int,
+        post_id: int,
+        group_id: int
+    ) -> int:
+        """
+        Удаляет все сообщения, где comment_id или parent_id равны target_id,
+        и совпадают post_id, group_id
+        
+        Возвращает количество удалённых записей.
+        """
+        # Найдём подходящие сообщения
+        messages_to_delete = await MessagePost.find({
+            "$and": [
+                {
+                    "$or": [
+                        {"comment_id": target_id},
+                        {"parent_id": target_id}
+                    ]
+                },
+                {"post_id": post_id},
+                {"group_id": group_id}
+            ]
+        }).to_list()
+
+        # Удалим их
+        for msg in messages_to_delete:
+            await msg.delete()
+
+        return len(messages_to_delete)
+
+
+# Класс для сохранения лидов
+class DealBitrix(ModelAdmin):
+
+    date: Optional[int] = None
+    link_post: Optional[str] = None
+    article: Optional[int] = None
+    link_user: Optional[str] = None
+    lead_count: Optional[str] = None
+    params: Optional[str] = None
+
+    class Settings:
+        name = "DealBitrix"
 
 
 # Класс для сохранения истории личных сообщений
@@ -129,7 +180,7 @@ class MessagePrivate(ModelAdmin):
     date: Optional[int] = None
     
     class Settings:
-        name = "MessagesPrivate"
+        name = 'MessagesPrivate'
 
 
 # Этот класс получения истории личных сообщений
@@ -155,17 +206,3 @@ class MessageHistoryPrivate:
             })
 
         return history
-
-
-# Класс для сохранения лидов
-class DealBitrix(ModelAdmin):
-
-    date: Optional[int] = None
-    link_post: Optional[str] = None
-    article: Optional[int] = None
-    link_user: Optional[str] = None
-    lead_count: Optional[str] = None
-    params: Optional[str] = None
-
-    class Settings:
-        name = "DealBitrix"

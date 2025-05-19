@@ -103,22 +103,24 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
             print(f"Неожиданный формат ответа при создании сделки: {deal_id}")
 
         # Добавляем в БД
-        await DealBitrix.create(date=date,
-                                link_post=link_post,
-                                article=article,
-                                link_user=link_user,
-                                lead_count=count,
-                                params=params)
+        await DealBitrix.create(
+            date=date,
+            link_post=link_post,
+            article=article,
+            link_user=link_user,
+            lead_count=count,
+            params=params
+        )
 
 
     except Exception as e:
         print(f"Ошибка при создании сделки: {e}")
 
 
-# Обрабатывает запрос пользователя: создаёт контакт (если нет), создаёт и привязывает к нему сделку
+# Обрабатывает запрос пользователя, создаёт и привязывает к нему сделку
 async def process_user_request(link_user: str, link_post: str, article: str, count: str, params: str, comment: str):
 
-    contact_id = await create_contact(link_user)
+    contact_id = await checking_contact(link_user)
 
     if contact_id:
         await create_deal(contact_id, link_post, article, count, params, link_user, comment)
