@@ -1,4 +1,5 @@
 import re
+import asyncio
 from quart import request
 from settings import settings
 
@@ -7,9 +8,9 @@ from services.cache import handle_comment
 from integrations.bitrix.bitrix_deal import *
 from db.beanie.models.models import MessagePost, MessageHistoryPost
 
-import asyncio
 
 vk_lock = asyncio.Lock()
+
 
 async def vk_callback():
     
@@ -58,7 +59,7 @@ async def vk_callback():
                 return "ok"
 
             # Проверка на существование контакта
-            link_user = f'https://vk.com/id{user_id}54545454'
+            link_user = f'https://vk.com/id{user_id}'
             if not await checking_contact(link_user):
                 text = 'Напишите в личные сообщения слово «Хочу», чтобы продолжить!'
                 await send_comment_reply(post_id, comment_id, text)

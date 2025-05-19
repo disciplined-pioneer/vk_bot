@@ -152,6 +152,38 @@ class MessageHistoryPost:
             await msg.delete()
 
         return len(messages_to_delete)
+    
+
+    @classmethod
+    async def get_post_user_map_from_parents(cls) -> Dict[int, List[int]]:
+        """
+        Ищет сообщения с заданным контентом, извлекает их parent_id.
+        По каждому parent_id ищет сообщение, у которого comment_id == parent_id.
+        Возвращает словарь вида {post_id: [comment_id, user_id]}.
+        """
+        trigger_content = "Напишите в личные сообщения слово «Хочу», чтобы продолжить!"
+        
+        # Шаг 1: находим все сообщения с нужным content
+        trigger_messages = await MessagePost.find({"content": trigger_content}).to_list()
+
+        # Шаг 2: извлекаем уникальные parent_id
+        parent_ids = {msg.parent_id for msg in trigger_messages if msg.parent_id is not None}
+        if not parent_ids:
+            return {}
+
+        # Шаг 3: находим сообщения, у которых comment_id совпадает с parent_id
+        matching_messages = await MessagePost.find({
+            "comment_id": {"$in": list(parent_ids)}
+        }).to_list()
+
+        # Шаг 4: собираем результат в виде {post_id: [comment_id, user_id]}
+        result = {}
+        for msg in matching_messages:
+            if msg.post_id is not None and msg.user_id is not None and msg.comment_id is not None:
+                result[msg.post_id] = [msg.comment_id, msg.user_id]
+
+        return result
+
 
 
 # Класс для сохранения лидов
