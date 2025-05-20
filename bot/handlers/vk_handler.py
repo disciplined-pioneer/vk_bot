@@ -61,7 +61,7 @@ async def vk_callback():
             # Проверка на существование контакта
             link_user = f'https://vk.com/id{user_id}'
             if not await checking_contact(link_user):
-                text = 'Напишите в личные сообщения слово «Хочу», чтобы продолжить!'
+                text = '‼️Важно‼️Чтобы мы смогли закрепить за вами товар, напишите нам в сообщения группы👉 http://vk.cc/9WVU0T слово «подтверждаю»'
                 await send_comment_reply(post_id, comment_id, text)
                 return "ok"
 

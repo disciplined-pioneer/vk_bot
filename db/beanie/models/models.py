@@ -162,7 +162,7 @@ class MessageHistoryPost:
         По каждому parent_id ищет сообщение, у которого comment_id == parent_id.
         Возвращает словарь вида {post_id: [comment_id, user_id]}.
         """
-        trigger_content = "Напишите в личные сообщения слово «Хочу», чтобы продолжить!"
+        trigger_content = "‼️Важно‼️Чтобы мы смогли закрепить за вами товар, напишите нам в сообщения группы👉 http://vk.cc/9WVU0T слово «подтверждаю»"
         
         # Шаг 1: находим все сообщения с нужным content
         trigger_messages = await MessagePost.find({"content": trigger_content}).to_list()
