@@ -195,7 +195,7 @@ class MessageHistoryPost:
         Возвращает общее количество удалённых сообщений.
         """
         now = int(time.time())
-        cutoff = now - 2 * 24 * 60 * 60  # 2 дня в секундах
+        cutoff = now - 600#2 * 24 * 60 * 60  # 2 дня в секундах
 
         # Шаг 1: Найти все устаревшие сообщения
         old_messages = await MessagePost.find({
