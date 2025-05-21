@@ -9,8 +9,8 @@ from db.beanie.models.models import MessageHistoryPost
 # Старт задачи
 async def run_every_ten_minutes():
     
-    print("🔁 Запущено ожидание 1 дня")
-    await asyncio.sleep(24*60*60)
+    print("🔁 Запущено ожидание 10 минут")
+    await asyncio.sleep(600)
     print("🚀 Активируем задачу.")
     await cancel_expired_exchanges()
 
