@@ -9,8 +9,8 @@ from db.beanie.models.models import MessageHistoryPost
 # Старт задачи
 async def run_every_ten_minutes():
     
-    print("🔁 Запущено ожидание 10 минут")
-    await asyncio.sleep(10)
+    print("🔁 Запущено ожидание 1 дня")
+    await asyncio.sleep(24*60*60)
     print("🚀 Активируем задачу.")
     await cancel_expired_exchanges()
 
@@ -25,7 +25,7 @@ async def cancel_expired_exchanges():
         if not await checking_contact(link_user):
             await send_comment_reply(post_id=post_id, comment_id=comment_id, text='Вы начали оформление заказа, но пока не подтвердили его. Пожалуйста, напишите «Хочу» в личные сообщения, чтобы мы могли завершить оформление и сохранить товар за вами.')
 
-    # Удаляем сообщения >= 10 минут
+    # Удаляем сообщения >= 2 дня
     deleted_count = await MessageHistoryPost.auto_cleanup_old_messages()
     print(f"Удалено {deleted_count} устаревших сообщений.")
 
