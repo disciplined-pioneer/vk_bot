@@ -106,13 +106,12 @@ async def vk_callback():
 
         # Обработка ЛС
         elif data["type"] == "message_new":
-            user_id = data["object"]["message"]["from_id"]
-            group_id = data["group_id"]
-            date = data["object"]["message"]["date"]
 
             # Проверка на наличие в контактах + запись, если нет
+            user_id = data["object"]["message"]["from_id"]
             link_user = f'https://vk.com/id{user_id}'
             await create_contact(link_user)
+            return "ok"
 
 
         """# ЛС ответ бота

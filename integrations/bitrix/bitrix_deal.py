@@ -5,6 +5,17 @@ from datetime import datetime, timezone
 from db.beanie.models.models import DealBitrix
 
 
+# Удаление контакта по его id
+async def delete_contact(contact_id):
+
+    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
+    response = await bit.call('crm.contact.delete', {'id': contact_id})
+    if response is True:
+        print(f"[+] Контакт {contact_id} успешно удалён.")
+    else:
+        print(f"[!] Не удалось удалить контакт {contact_id}: {response}")
+
+
 # Получает все контакты
 async def get_all_contacts():
 
@@ -34,19 +45,25 @@ async def checking_contact(link_user):
     return False
 
 
-# Создаёт контакт в Bitrix24 или возвращает ID существующего контакта
+# Создаёт контакт в Bitrix24 или возвращает ID
 async def create_contact(link_user: str):
-    
-    # Проверка на наличие контакта
+
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
+
+    # Проверяем, существует ли контакт
     contact_id = await checking_contact(link_user)
     if contact_id:
         return contact_id
 
-    # Если контакт не найден, создаём новый
+    # Получаем имя и фамилию с VK
+    first_name, last_name = await get_vk_name(link_user)
+
+    # Создаём контакт
     contact_data = {
         'fields': {
-            "UF_CRM_1742556149": link_user
+            'NAME': first_name,
+            'LAST_NAME': last_name,
+            'UF_CRM_1742556149': link_user
         }
     }
 
@@ -126,3 +143,22 @@ async def process_user_request(link_user: str, link_post: str, article: str, cou
         await create_deal(contact_id, link_post, article, count, params, link_user, comment)
     else:
         print("Не удалось создать контакт, сделка не будет создана")
+
+
+import aiohttp
+# Получение данных пользователя
+async def get_vk_name(link_user: str):
+    user_id = link_user.split("id")[-1]
+    url = "https://api.vk.com/method/users.get"
+    params = {
+        "access_token": settings.vk_bot.ACCESS_TOKEN,
+        "user_ids": user_id,
+        "v": "5.131"
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params, ssl=False) as response:
+            data = await response.json()
+            first_name = data['response'][0]['first_name']
+            last_name = data['response'][0]['last_name']
+            return first_name, last_name
