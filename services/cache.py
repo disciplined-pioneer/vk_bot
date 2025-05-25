@@ -8,6 +8,7 @@ MAX_CACHE_SIZE = 50  # макс. 50 комментариев
 TTL = 5  # 5 секунд
 
 async def handle_comment(comment_id: str) -> bool:
+    
     async with lock:
         key = f"comment_{comment_id}"
 

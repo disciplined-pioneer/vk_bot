@@ -1,4 +1,6 @@
 import time
+from datetime import datetime, timedelta
+
 from typing import Optional
 from beanie import Document
 from typing import List, Dict, Optional
@@ -220,7 +222,7 @@ class MessageHistoryPost:
         return deleted_total
 
 
-# Класс для сохранения лидов
+# Класс для сохранения сделок
 class DealBitrix(ModelAdmin):
 
     date: Optional[int] = None
@@ -232,6 +234,45 @@ class DealBitrix(ModelAdmin):
 
     class Settings:
         name = "DealBitrix"
+
+
+# Временное хранилище сделок
+class TempDealBitrix(ModelAdmin):
+    date: Optional[int] = None
+    link_post: Optional[str] = None
+    article: Optional[int] = None
+    link_user: Optional[str] = None
+    lead_count: Optional[str] = None
+    params: Optional[str] = None
+
+    class Settings:
+        name = "TempDealBitrix"
+
+
+class TempDealLogic:
+
+    @classmethod
+    async def delete_old_records(cls) -> int:
+        """Удаляет все записи, у которых дата старше 2 дней. Возвращает количество удалённых записей."""
+        cutoff_timestamp = int((datetime.utcnow() - timedelta(days=2)).timestamp() * 1000)
+
+        collection = TempDealBitrix.get_motor_collection()
+        result = await collection.delete_many({
+            "date": {"$lte": cutoff_timestamp}
+        })
+
+        return result.deleted_count
+
+    @classmethod
+    async def delete_by_link_user(cls, link_user: str) -> int:
+        """Удаляет все записи с указанным link_user. Возвращает количество удалённых записей."""
+        collection = TempDealBitrix.get_motor_collection()
+        result = await collection.delete_many({
+            "link_user": link_user
+        })
+
+        return result.deleted_count
+
 
 
 # Класс для сохранения истории личных сообщений
@@ -271,4 +312,4 @@ class MessageHistoryPrivate:
                 "content": msg.content
             })
 
-        return history
+        return history 

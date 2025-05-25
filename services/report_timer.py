@@ -3,7 +3,7 @@ import logging
 
 from utils.vk_handler import send_comment_reply
 from integrations.bitrix.bitrix_deal import checking_contact
-from db.beanie.models.models import MessageHistoryPost
+from db.beanie.models.models import MessageHistoryPost, TempDealLogic
 
 
 # Старт задачи
@@ -27,6 +27,7 @@ async def cancel_expired_exchanges():
 
     # Удаляем сообщения >= 2 дня
     deleted_count = await MessageHistoryPost.auto_cleanup_old_messages()
+    await TempDealLogic.delete_old_records()
     print(f"Удалено {deleted_count} устаревших сообщений.")
 
 
