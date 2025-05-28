@@ -79,46 +79,44 @@ async def vk_callback():
                 link_user = f'https://vk.com/id{user_id}'
                 link_post = f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}"
 
-                async with aiohttp.ClientSession() as session:
-                    result = await checking_contact(link_user, client=session)
+                result = await checking_contact(link_user)
 
-                    if not result:
-                        text = (
-                            '‼️Важно‼️Чтобы мы смогли закрепить за вами товар, '
-                            'напишите нам в сообщения группы👉 http://vk.cc/9WVU0T слово «подтверждаю»'
-                        )
-                        await send_comment_reply(post_id, comment_id, text)
-
-                        await TempDealBitrix.create(
-                            date=int(datetime.now(timezone.utc).timestamp() * 1000),
-                            link_post=link_post,
-                            article=article,
-                            link_user=link_user,
-                            lead_count=count,
-                            params=order_info,
-                        )
-
-                    deleted_count = await MessageHistoryPost.delete_related_messages(
-                        target_id=parent_id,
-                        post_id=post_id,
-                        group_id=group_id,
+                if not result:
+                    text = (
+                        '‼️Важно‼️Чтобы мы смогли закрепить за вами товар, '
+                        'напишите нам в сообщения группы👉 http://vk.cc/9WVU0T слово «подтверждаю»'
                     )
-                    print(f"Удалено сообщений: {deleted_count}")
+                    await send_comment_reply(post_id, comment_id, text)
 
-                    if not result:
-                        return "ok"
-
-                    """contact_id = await checking_contact(link_user, client=session)
-                    await process_user_request(
-                        link_user=link_user,
+                    await TempDealBitrix.create(
+                        date=int(datetime.now(timezone.utc).timestamp() * 1000),
                         link_post=link_post,
-                        count=str(count),
-                        article=str(article),
+                        article=article,
+                        link_user=link_user,
+                        lead_count=count,
                         params=order_info,
-                        comment=comment_text,
-                        client=session,
-                        contact_id=contact_id
-                    )"""
+                    )
+
+                deleted_count = await MessageHistoryPost.delete_related_messages(
+                    target_id=parent_id,
+                    post_id=post_id,
+                    group_id=group_id,
+                )
+                print(f"Удалено сообщений: {deleted_count}")
+
+                if not result:
+                    return "ok"
+
+                contact_id = await checking_contact(link_user)
+                await process_user_request(
+                    link_user=link_user,
+                    link_post=link_post,
+                    count=str(count),
+                    article=str(article),
+                    params=order_info,
+                    comment=comment_text,
+                    contact_id=contact_id
+                )
 
             else:
                 await send_comment_reply(post_id, comment_id, message_gpt)
@@ -135,38 +133,29 @@ async def vk_callback():
                 return "ok"
                 
             if message_user.lower() == 'подтверждаю':
-                await asyncio.sleep(5)
                 
-                async with aiohttp.ClientSession() as session:
-                    # 1. Проверяем и обновляем контакт
-                    contact_id = await update_contact_vk_link_by_name(link=link_user, client=session)
-                    if not contact_id:
-                        return "ok"
+                await asyncio.sleep(4)
+                
+                # 1. Проверяем и обновляем контакт
+                contact_id = await update_contact_vk_link_by_name(link=link_user)
+                
+                # 2. Получаем сделку
+                all_deals = await TempDealBitrix.filter(link_user=link_user)
+                
+                # 3. Создаем сделку
+                if all_deals:
+                    deal = all_deals[-1]
+                    await create_deal(
+                        contact_id=contact_id,
+                        link_post=deal.link_post,
+                        article=str(deal.article),
+                        count=str(deal.lead_count),
+                        params=deal.params,
+                        link_user=link_user,
+                        comment=''
+                    )
 
-                    print(f"[DEBUG] After update_contact_vk_link_by_name. Session closed? {session.closed}")
-                    
-                    # 2. Получаем сделку
-                    all_deals = await TempDealBitrix.filter(link_user=link_user)
-                    print(f"[DEBUG] After TempDealBitrix.filter. Session closed? {session.closed}")
-                    
-                    # 3. Создаем сделку
-                    if all_deals:
-                        deal = all_deals[0]
-                        await create_deal(
-                            contact_id=contact_id,
-                            link_post=deal.link_post,
-                            article=str(deal.article),
-                            count=str(deal.lead_count),
-                            params=deal.params,
-                            link_user=link_user,
-                            comment='',
-                            client=session
-                        )
-                        print(f"[DEBUG] After create_deal. Session closed? {session.closed}")
-
-                            
-                """a = await TempDealLogic.delete_by_link_user(link_user)
-                print(a)"""
+                await TempDealLogic.delete_by_link_user(link_user)
 
 
             return "ok"

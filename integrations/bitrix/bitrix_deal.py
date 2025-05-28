@@ -1,13 +1,16 @@
 import re
-import aiohttp
 import fast_bitrix24
 from settings import settings
 from datetime import datetime, timezone
 from db.beanie.models.models import DealBitrix
 
+from core.http_client import get_client
+
 
 # Удаление контакта по его id
-async def delete_contact(contact_id, client: aiohttp.ClientSession):
+async def delete_contact(contact_id):
+
+    client = await get_client()
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=client)
     response = await bit.call('crm.contact.delete', {'id': contact_id})
     if response is True:
@@ -17,7 +20,9 @@ async def delete_contact(contact_id, client: aiohttp.ClientSession):
 
 
 # Получает все контакты
-async def get_all_contacts(client: aiohttp.ClientSession):
+async def get_all_contacts():
+
+    client = await get_client()
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=client)
     try:
         contacts = await bit.get_all('crm.contact.list', {
@@ -30,12 +35,12 @@ async def get_all_contacts(client: aiohttp.ClientSession):
         return []
 
     
-
 # Обновление ссылки по фамилии и имени
-async def update_contact_vk_link_by_name(link: str, client: aiohttp.ClientSession):
+async def update_contact_vk_link_by_name(link: str):
 
-    contacts = await get_all_contacts(client=client)
-    first_name, last_name = await get_vk_name(link_user=link, client=client)
+    client = await get_client()
+    contacts = await get_all_contacts()
+    first_name, last_name = await get_vk_name(link_user=link)
 
     target_contact = next(
         (c for c in contacts if c.get("NAME") == first_name and c.get("LAST_NAME") == last_name),
@@ -45,8 +50,9 @@ async def update_contact_vk_link_by_name(link: str, client: aiohttp.ClientSessio
     if not target_contact:
         print(f"[❌] Контакт '{first_name} {last_name}' не найден.")
         return
-
+    
     contact_id = target_contact["ID"]
+    print(contact_id, target_contact)
     current_value = target_contact.get("UF_CRM_1742556149")
 
     if current_value:
@@ -69,16 +75,14 @@ async def update_contact_vk_link_by_name(link: str, client: aiohttp.ClientSessio
             return contact_id
 
 
-
 # Проверка на наличие контакта
-async def checking_contact(link_user: str, client: aiohttp.ClientSession):
-    all_contacts = await get_all_contacts(client)
+async def checking_contact(link_user: str):
+    all_contacts = await get_all_contacts()
     for contact in all_contacts:
         if contact['UF_CRM_1742556149'] == link_user:
             print(f"Контакт с link_user={link_user} уже существует. ID: {contact['ID']}")
             return contact['ID']
     return False
-
 
 
 """# Создаёт контакт в Bitrix24 или возвращает ID
@@ -114,8 +118,9 @@ async def create_contact(link_user: str, client: aiohttp.ClientSession):
 
 
 # Создаёт сделку и привязывает к контакту
-async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str, client: aiohttp.ClientSession):
+async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str):
     
+    client = await get_client()
     bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=client)
 
     date = int(datetime.now(timezone.utc).timestamp() * 1000)
@@ -136,6 +141,7 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
 
     try:
         deal_id = await bit.call('crm.deal.add', deal_data)
+        
         if isinstance(deal_id, dict) and 'result' in deal_id:
             print(f"Создана сделка с ID: {deal_id['result']}")
         elif isinstance(deal_id, int):
@@ -155,15 +161,16 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
         print(f"Ошибка при создании сделки: {e}")
 
 
-
 # Обрабатывает запрос пользователя, создаёт и привязывает к нему сделку
-async def process_user_request(link_user: str, link_post: str, article: str, count: str, params: str, contact_id, bit, comment: str = ''):
+async def process_user_request(link_user: str, link_post: str, article: str, count: str, params: str, contact_id, comment: str = ''):
     if contact_id:
-        await create_deal(contact_id, link_post, article, count, params, link_user, comment, bit)
+        await create_deal(contact_id, link_post, article, count, params, link_user, comment)
 
 
 # Получение данных пользователя
-async def get_vk_name(link_user: str, client: aiohttp.ClientSession):
+async def get_vk_name(link_user: str):
+
+    client = await get_client()
     user_id = link_user.split("id")[-1]
     url = "https://api.vk.com/method/users.get"
     params = {
