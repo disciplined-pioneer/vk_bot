@@ -80,8 +80,7 @@ async def vk_callback():
                 link_post = f"https://vk.com/wall{settings.vk_bot.GROUP_ID}_{post_id}"
 
                 async with aiohttp.ClientSession() as session:
-                    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=session)
-                    result = await checking_contact(link_user, bit)
+                    result = await checking_contact(link_user, client=session)
 
                     if not result:
                         text = (
@@ -109,7 +108,7 @@ async def vk_callback():
                     if not result:
                         return "ok"
 
-                    contact_id = await checking_contact(link_user, bit)
+                    """contact_id = await checking_contact(link_user, client=session)
                     await process_user_request(
                         link_user=link_user,
                         link_post=link_post,
@@ -119,7 +118,7 @@ async def vk_callback():
                         comment=comment_text,
                         client=session,
                         contact_id=contact_id
-                    )
+                    )"""
 
             else:
                 await send_comment_reply(post_id, comment_id, message_gpt)
@@ -139,23 +138,33 @@ async def vk_callback():
                 await asyncio.sleep(5)
                 
                 async with aiohttp.ClientSession() as session:
+                    # 1. Проверяем и обновляем контакт
+                    contact_id = await update_contact_vk_link_by_name(link=link_user, client=session)
+                    if not contact_id:
+                        return "ok"
 
-                    print(f"[DEBUG] Session just created. Closed? {session.closed}")
-                    bitr = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=session)
-
-                    contact_id = await update_contact_vk_link_by_name(link=link_user, bit=bitr, client=session)
                     print(f"[DEBUG] After update_contact_vk_link_by_name. Session closed? {session.closed}")
-
+                    
+                    # 2. Получаем сделку
                     all_deals = await TempDealBitrix.filter(link_user=link_user)
                     print(f"[DEBUG] After TempDealBitrix.filter. Session closed? {session.closed}")
+                    
+                    # 3. Создаем сделку
                     if all_deals:
                         deal = all_deals[0]
-                        if contact_id:
-                            await create_deal(contact_id, deal.link_post, str(deal.article), str(deal.lead_count), deal.params, link_user, '', bitr)
-                            print(f"[DEBUG] After create_deal. Session closed? {session.closed}")
+                        await create_deal(
+                            contact_id=contact_id,
+                            link_post=deal.link_post,
+                            article=str(deal.article),
+                            count=str(deal.lead_count),
+                            params=deal.params,
+                            link_user=link_user,
+                            comment='',
+                            client=session
+                        )
+                        print(f"[DEBUG] After create_deal. Session closed? {session.closed}")
 
-                print(f"[DEBUG] Session context exited. Session closed? {session.closed}")
-                
+                            
                 """a = await TempDealLogic.delete_by_link_user(link_user)
                 print(a)"""
 

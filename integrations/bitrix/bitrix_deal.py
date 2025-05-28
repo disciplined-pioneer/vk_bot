@@ -17,24 +17,24 @@ async def delete_contact(contact_id, client: aiohttp.ClientSession):
 
 
 # Получает все контакты
-async def get_all_contacts(bit):
-
+async def get_all_contacts(client: aiohttp.ClientSession):
+    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=client)
     try:
         contacts = await bit.get_all('crm.contact.list', {
             'select': ['ID', 'NAME', 'LAST_NAME', 'UF_CRM_1742556149']
         })
         sorted_contacts = sorted(contacts, key=lambda x: int(x['ID']), reverse=True)
         return sorted_contacts
-    
     except Exception as e:
         print(f"Ошибка при получении контактов: {e}")
         return []
+
     
 
 # Обновление ссылки по фамилии и имени
-async def update_contact_vk_link_by_name(link: str, client: aiohttp.ClientSession, bit):
+async def update_contact_vk_link_by_name(link: str, client: aiohttp.ClientSession):
 
-    contacts = await get_all_contacts(bit=bit)
+    contacts = await get_all_contacts(client=client)
     first_name, last_name = await get_vk_name(link_user=link, client=client)
 
     target_contact = next(
@@ -69,14 +69,16 @@ async def update_contact_vk_link_by_name(link: str, client: aiohttp.ClientSessio
             return contact_id
 
 
+
 # Проверка на наличие контакта
-async def checking_contact(link_user, bit):
-    all_contacts = await get_all_contacts(bit)
+async def checking_contact(link_user: str, client: aiohttp.ClientSession):
+    all_contacts = await get_all_contacts(client)
     for contact in all_contacts:
         if contact['UF_CRM_1742556149'] == link_user:
             print(f"Контакт с link_user={link_user} уже существует. ID: {contact['ID']}")
             return contact['ID']
     return False
+
 
 
 """# Создаёт контакт в Bitrix24 или возвращает ID
@@ -112,7 +114,9 @@ async def create_contact(link_user: str, client: aiohttp.ClientSession):
 
 
 # Создаёт сделку и привязывает к контакту
-async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str, bitr):
+async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str, client: aiohttp.ClientSession):
+    
+    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=client)
 
     date = int(datetime.now(timezone.utc).timestamp() * 1000)
     article = re.sub(r"\D", "", article)
@@ -131,7 +135,7 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
     }
 
     try:
-        deal_id = await bitr.call('crm.deal.add', deal_data)
+        deal_id = await bit.call('crm.deal.add', deal_data)
         if isinstance(deal_id, dict) and 'result' in deal_id:
             print(f"Создана сделка с ID: {deal_id['result']}")
         elif isinstance(deal_id, int):
@@ -149,6 +153,7 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
         )
     except Exception as e:
         print(f"Ошибка при создании сделки: {e}")
+
 
 
 # Обрабатывает запрос пользователя, создаёт и привязывает к нему сделку
