@@ -6,12 +6,9 @@ from datetime import datetime, timezone
 from db.beanie.models.models import DealBitrix
 
 
-bit = fast_bitrix24.Bitrix(settings.bitrix24.URL)
-
-
 # Удаление контакта по его id
-async def delete_contact(contact_id):
-
+async def delete_contact(contact_id, client: aiohttp.ClientSession):
+    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=client)
     response = await bit.call('crm.contact.delete', {'id': contact_id})
     if response is True:
         print(f"[+] Контакт {contact_id} успешно удалён.")
@@ -20,7 +17,7 @@ async def delete_contact(contact_id):
 
 
 # Получает все контакты
-async def get_all_contacts():
+async def get_all_contacts(bit):
 
     try:
         contacts = await bit.get_all('crm.contact.list', {
@@ -32,14 +29,49 @@ async def get_all_contacts():
     except Exception as e:
         print(f"Ошибка при получении контактов: {e}")
         return []
+    
+
+# Обновление ссылки по фамилии и имени
+async def update_contact_vk_link_by_name(link: str, client: aiohttp.ClientSession, bit):
+
+    contacts = await get_all_contacts(bit=bit)
+    first_name, last_name = await get_vk_name(link_user=link, client=client)
+
+    target_contact = next(
+        (c for c in contacts if c.get("NAME") == first_name and c.get("LAST_NAME") == last_name),
+        None
+    )
+
+    if not target_contact:
+        print(f"[❌] Контакт '{first_name} {last_name}' не найден.")
+        return
+
+    contact_id = target_contact["ID"]
+    current_value = target_contact.get("UF_CRM_1742556149")
+
+    if current_value:
+        print(f"[⏩] Контакт {first_name} {last_name} уже имеет ссылку: {current_value}")
+        return contact_id
+
+    async with client.post(
+        f"{settings.bitrix24.URL}/crm.contact.update",
+        data={
+            "id": contact_id,
+            "fields[UF_CRM_1742556149]": link
+        }
+    ) as resp:
+        result = await resp.json()
+        if result.get("error"):
+            print(f"[❌] Ошибка при обновлении контакта {contact_id}: {result['error_description']}")
+            return None
+        else:
+            print(f"[✅] Контакт {first_name} {last_name} обновлён. Ссылка: {link}")
+            return contact_id
 
 
 # Проверка на наличие контакта
-async def checking_contact(link_user):
-
-    # Проверяем, существует ли контакт с таким link_user
-    all_contacts = await get_all_contacts()
-
+async def checking_contact(link_user, bit):
+    all_contacts = await get_all_contacts(bit)
     for contact in all_contacts:
         if contact['UF_CRM_1742556149'] == link_user:
             print(f"Контакт с link_user={link_user} уже существует. ID: {contact['ID']}")
@@ -47,18 +79,13 @@ async def checking_contact(link_user):
     return False
 
 
-# Создаёт контакт в Bitrix24 или возвращает ID
-async def create_contact(link_user: str, session: aiohttp.ClientSession):
-
-    # Проверяем, существует ли контакт
-    contact_id = await checking_contact(link_user)
+"""# Создаёт контакт в Bitrix24 или возвращает ID
+async def create_contact(link_user: str, client: aiohttp.ClientSession):
+    contact_id = await checking_contact(link_user, client)
     if contact_id:
         return contact_id
 
-    # Получаем имя и фамилию с VK
-    first_name, last_name = await get_vk_name(link_user, session)
-
-    # Создаём контакт
+    first_name, last_name = await get_vk_name(link_user, client)
     contact_data = {
         'fields': {
             'NAME': first_name,
@@ -67,35 +94,32 @@ async def create_contact(link_user: str, session: aiohttp.ClientSession):
         }
     }
 
-    # Создаём контакт
+    bit = fast_bitrix24.Bitrix(settings.bitrix24.URL, client=client)
     try:
         contact_id = await bit.call('crm.contact.add', contact_data)
         if isinstance(contact_id, dict) and 'result' in contact_id:
             print(f"Создан контакт с ID: {contact_id['result']}")
             return contact_id['result']
-        
         elif isinstance(contact_id, int):
             print(f"Создан контакт с ID: {contact_id}")
             return contact_id
-        
         else:
             print(f"Неожиданный формат ответа при создании контакта: {contact_id}")
             return None
-        
     except Exception as e:
         print(f"Ошибка при создании контакта: {e}")
-        return None
+        return None"""
 
 
 # Создаёт сделку и привязывает к контакту
-async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str):
-    
+async def create_deal(contact_id: int, link_post: str, article: str, count: str, params: str, link_user: str, comment: str, bitr):
+
     date = int(datetime.now(timezone.utc).timestamp() * 1000)
     article = re.sub(r"\D", "", article)
     deal_data = {
         'fields': {
             "TITLE": "ВК БОТ", 
-            "CONTACT_ID": contact_id,  # Привязка к контакту
+            "CONTACT_ID": contact_id,
             "UF_CRM_1742556368": date,
             "UF_CRM_1742556254": link_post,
             "UF_CRM_1742556276": article,
@@ -106,19 +130,15 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
         }
     }
 
-    # Создаём сделку
     try:
-        deal_id = await bit.call('crm.deal.add', deal_data)
+        deal_id = await bitr.call('crm.deal.add', deal_data)
         if isinstance(deal_id, dict) and 'result' in deal_id:
             print(f"Создана сделка с ID: {deal_id['result']}")
-
         elif isinstance(deal_id, int):
             print(f"Создана сделка с ID: {deal_id}")
-
         else:
             print(f"Неожиданный формат ответа при создании сделки: {deal_id}")
 
-        # Добавляем в БД
         await DealBitrix.create(
             date=date,
             link_post=link_post,
@@ -127,29 +147,18 @@ async def create_deal(contact_id: int, link_post: str, article: str, count: str,
             lead_count=count,
             params=params
         )
-
-
     except Exception as e:
         print(f"Ошибка при создании сделки: {e}")
 
 
 # Обрабатывает запрос пользователя, создаёт и привязывает к нему сделку
-async def process_user_request(link_user: str, link_post: str, article: str, count: str, params: str, comment: str, session: aiohttp.ClientSession):
-    
-    contact_id = await checking_contact(link_user)
+async def process_user_request(link_user: str, link_post: str, article: str, count: str, params: str, contact_id, bit, comment: str = ''):
     if contact_id:
-        await create_deal(contact_id, link_post, article, count, params, link_user, comment)
-    else:
-        # если контакта нет — создаём и сразу сделку
-        contact_id = await create_contact(link_user, session)
-        if contact_id:
-            await create_deal(contact_id, link_post, article, count, params, link_user, comment)
-        else:
-            print("Не удалось создать контакт, сделка не будет создана")
+        await create_deal(contact_id, link_post, article, count, params, link_user, comment, bit)
 
 
 # Получение данных пользователя
-async def get_vk_name(link_user: str, session: aiohttp.ClientSession):
+async def get_vk_name(link_user: str, client: aiohttp.ClientSession):
     user_id = link_user.split("id")[-1]
     url = "https://api.vk.com/method/users.get"
     params = {
@@ -158,7 +167,7 @@ async def get_vk_name(link_user: str, session: aiohttp.ClientSession):
         "v": "5.131"
     }
 
-    async with session.get(url, params=params, ssl=False) as response:
+    async with client.get(url, params=params, ssl=False) as response:
         data = await response.json()
         first_name = data['response'][0]['first_name']
         last_name = data['response'][0]['last_name']

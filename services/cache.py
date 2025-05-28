@@ -4,8 +4,8 @@ from aiocache import SimpleMemoryCache
 cache = SimpleMemoryCache()
 lock = asyncio.Lock()
 
-MAX_CACHE_SIZE = 50  # макс. 50 комментариев
-TTL = 5  # 5 секунд
+MAX_CACHE_SIZE = 100  # макс. 50 комментариев
+TTL = 60  # 5 секунд
 
 async def handle_comment(comment_id: str) -> bool:
     
